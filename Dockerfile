@@ -12,6 +12,12 @@ LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 #         <ver> Geosupport version (required)
 #         <zip> Zip file (defaults to 'gdelx_<rel>.zip' in this directory)
 #
+#   ENV:
+#         $ docker build ... \
+#               -e GEOSUPPORT_HOME=<gshome> # defaults to '/opt/geosupport' \
+#               -e GEOSUPPORT_RELEASE=<rel> \
+#               -e GEOSUPPORT_VERSION=<ver>
+#
 #   USE:
 #         # 1. Create a "data-packed volume container"
 #         $ docker run -d --name geosupport-17c_17.3 mlipper/geosupport-docker:17c_17.3
@@ -34,7 +40,7 @@ LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 #      
 ARG gsrelease="17c"
 ARG gsversion="17.3"
-ARG distfile="gdelx_${gsversion}.zip"
+ARG distfile="gdelx_${gsrelease}.zip"
 
 ENV DISTFILE ${DISTFILE:-$distfile}
 ENV GEOSUPPORT_HOME ${GEOSUPPORT_HOME:-/opt/geosupport}
@@ -55,21 +61,34 @@ RUN set -o errexit -o nounset \
   && unzip -qj /$DISTFILE "**/bin/*" -d $GEOSUPPORT_HOME/bin \
   && unzip -qj /$DISTFILE "**/lib/*" -d $GEOSUPPORT_HOME/lib \
   && unzip -qj /$DISTFILE "**/fls/*" -d $GEOSUPPORT_HOME/fls \
+  && ln -nfs $GEOSUPPORT_HOME/bin/c_client $GEOSUPPORT_HOME/bin/goat \
   && rm /$DISTFILE
 
 ENV PATH $GEOSUPPORT_HOME/bin:$PATH
-# Trailing backslash is required!
+# Trailing '/' is required!
 ENV GEOFILES $GEOSUPPORT_HOME/fls/
 
+COPY initenv $GEOSUPPORT_HOME/bin/initenv
+
 RUN set -o errexit -o nounset \
-  && { \
-    echo '#!/bin/bash'; \
-    echo; \
-    echo "export GEOSUPPORT_HOME=${GEOSUPPORT_HOME}"; \
-    echo "export GEOFILES=${GEOFILES}"; \
-    echo "export GS_LIBRARY_PATH=${GEOSUPPORT_HOME}/lib"; \
-    echo; \
-  } >> $GEOSUPPORT_HOME/bin/initenv \
+  && sed -i 's/@GEOSUPPORT_HOME@/$GEOSUPPORT_HOME/g' $GEOSUPPORT_HOME/bin/initenv \
   && chmod 755 $GEOSUPPORT_HOME/bin/initenv
+
+#RUN set -o errexit -o nounset \
+#  && { \
+#    echo '#!/bin/env bash'; \
+#    echo; \
+#    echo "export GEOSUPPORT_HOME=${GEOSUPPORT_HOME}"; \
+#    echo "export GEOFILES=${GEOFILES}"; \
+#    echo "export GS_LIBRARY_PATH=${GEOSUPPORT_HOME}/lib"; \
+#    echo; \
+#    echo "case $1 in"; \
+#    echo "  ldconfig) echo $GS_LIBRARY_PATH > /etc/ld.so.conf.d/geosupport.conf; ldconfig; ;;"; \
+#    echo "  libpath) export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}; ;;"; \
+#    echo "  *) echo \"Ignoring unrecognized argument $1\"; ;;"; \
+#    echo "esac"; \
+#    echo; \
+#  } >> $GEOSUPPORT_HOME/bin/initenv \
+#  && chmod 755 $GEOSUPPORT_HOME/bin/initenv
 
 VOLUME ["$GEOSUPPORT_HOME"]
