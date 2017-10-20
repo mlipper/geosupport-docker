@@ -7,7 +7,7 @@ the specified release/version of Geosupport.
 
 ### Volumes
 
-Populates managed volume `/opt/geosupport/server/current`.
+Populates managed volume `/opt/geosupport`.
 
 #### About Geosupport
 
