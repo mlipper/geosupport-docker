@@ -1,22 +1,21 @@
 #!/usr/bin/env bash
 
-set -e
-
 export GEOSUPPORT_HOME=@GEOSUPPORT_HOME@
 export GEOFILES=$GEOSUPPORT_HOME/fls/
 export GS_LIBRARY_PATH=$GEOSUPPORT_HOME/lib
-
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
 export PATH=$PATH:$GEOSUPPORT_HOME/bin
 
-case "$1" in
-  libpath)
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
-    ;;
-  ldconfig) 
-    echo $GS_LIBRARY_PATH > /etc/ld.so.conf.d/geosupport.conf
-    ldconfig
-    ;;
-  *)
-    echo "Ignoring unrecognized argument $1"
-    ;;
-esac
+function gslibinstall {
+  # Will fail if not run as root
+  echo $GS_LIBRARY_PATH > /etc/ld.so.conf.d/geosupport.conf
+  ldconfig
+}
+
+function gsconf {
+  echo GEOSUPPORT_HOME=$GEOSUPPORT_HOME
+  echo GEOFILES=$GEOFILES
+  echo GS_LIBRARY_PATH=$GS_LIBRARY_PATH
+  echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+  echo PATH=$PATH
+}
