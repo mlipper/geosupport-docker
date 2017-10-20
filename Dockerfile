@@ -29,7 +29,9 @@ LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 #            (GEOSUPPORT_HOME, GEOFILES, GS_LIBRARY_PATH, and LD_LIBRARY_PATH);
 #
 #            $ . /opt/geosupport/bin/initenv
+
 #
+# 17c_17.3: digest: sha256:1078c324663573ae77a04a27fe4e54427c266c25d05523bc3bd7968c38c07113 size: 1786
 #
 ENV GEOSUPPORT_RELEASE "17c"
 ENV GEOSUPPORT_VERSION "17.3"
