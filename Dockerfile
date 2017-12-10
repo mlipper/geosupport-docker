@@ -17,24 +17,23 @@ LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 #
 #         1. By default, this image runs the Geosupport CLI
 #
-#            $ docker run -it --name geosupport-17c_17.3 mlipper/geosupport-docker:17c_17.3
+#            $ docker run -it --name geosupport-<release>_<version> mlipper/geosupport-docker:<release_version>
 #
 #         As a "volume container" (for programmatic access from another container):
 #
 #         2. Create your own container and reference the volume created by #1.
 #
-#            $ docker run --rm -it --name my-geocoder --volumes-from geosupport-17c_17.3 ubuntu:latest bash
+#            $ docker run --rm -it --name my-geocoder --volumes-from geosupport-<release>_<version> ubuntu:latest bash
 #
 #         3. Setup your container with the Geosupport environment variables
 #            (GEOSUPPORT_HOME, GEOFILES, GS_LIBRARY_PATH, and LD_LIBRARY_PATH);
 #
 #            $ . /opt/geosupport/bin/initenv
-
 #
-# 17c_17.3: digest: sha256:1078c324663573ae77a04a27fe4e54427c266c25d05523bc3bd7968c38c07113 size: 1786
+# 17d_17.4: digest: sha256:1a267ac91ecb2ae71cfd30e6194663afb9caf3a5a974c9881283bd7c47837be7 size: 1786
 #
-ENV GEOSUPPORT_RELEASE "17c"
-ENV GEOSUPPORT_VERSION "17.3"
+ENV GEOSUPPORT_RELEASE "17d"
+ENV GEOSUPPORT_VERSION "17.4"
 ENV LANG C.UTF-8
 
 LABEL gsrelease $GEOSUPPORT_RELEASE
