@@ -1,0 +1,5 @@
+FROM mlipper/geosupport-docker-onbuild:latest
+
+CMD ["bash", "-c", ".", "/opt/geosupport/bin/initenv"]
+VOLUME ["/opt/geosupport"]
+ENTRYPOINT ["bash", "-c"]

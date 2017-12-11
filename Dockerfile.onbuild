@@ -1,0 +1,69 @@
+FROM debian:stretch
+LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
+# 
+#
+# This image does not declare a volume which is almost always necessary
+# for geosupport-docker to be useful at all. That is because all this
+# project does is allow one to have the Geosupport libraries and data
+# installed and (optionally) the environment configured.
+#
+# With that in mind, consider adding the following to your Dockerfile
+# which uses this as its base image:
+#
+#   FROM geoclient-docker-onbuild:latest
+#   ...
+#   # Source shell script to export Geosupport environment
+#   CMD ["bash", "-c", ".", "/opt/geosupport/bin/initenv"]
+#   ...
+#   # After the above, declare volume for referencing with '--volumes-from...'
+#   VOLUME ["$GEOSUPPORT_HOME"]
+#
+# For an example, see 'examples/Dockerfile-onbuild.example'
+#
+ENV GEOSUPPORT_RELEASE "17d"
+ENV GEOSUPPORT_VERSION "17.4"
+ENV LANG C.UTF-8
+
+LABEL gsrelease $GEOSUPPORT_RELEASE
+LABEL gsversion $GEOSUPPORT_VERSION
+
+ENV DISTFILE "gdelx_${GEOSUPPORT_RELEASE}.zip"
+ENV GEOSUPPORT_HOME ${GEOSUPPORT_HOME:-/opt/geosupport}
+
+COPY $DISTFILE /$DISTFILE
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PATH $GEOSUPPORT_HOME/bin:$PATH
+# Trailing '/' is required!
+ENV GEOFILES $GEOSUPPORT_HOME/fls/
+ENV GS_LIBRARY_PATH $GEOSUPPORT_HOME/lib
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
+
+WORKDIR $GEOSUPPORT_HOME
+ONBUILD RUN set -o errexit -o nounset \
+  && echo "Installing Geosupport" \
+  && unzip -qj /$DISTFILE "**/bin/*" -d $GEOSUPPORT_HOME/bin \
+  && unzip -qj /$DISTFILE "**/lib/*" -d $GEOSUPPORT_HOME/lib \
+  && unzip -qj /$DISTFILE "**/fls/*" -d $GEOSUPPORT_HOME/fls \
+  && ln -nfs $GEOSUPPORT_HOME/bin/c_client $GEOSUPPORT_HOME/bin/goat \
+  && rm /$DISTFILE
+
+#
+# Add a bash script which can be sourced by another container to setup the
+# Geosupport shared library path and datafile environment variables.
+#
+# This is for applications which do not extend this image but want to mount
+# the $GEOSUPPORT_HOME directory exposed as a volume by containers built
+# from this image (e.g., using --volumes-from).
+#
+ONBUILD COPY initenv $GEOSUPPORT_HOME/bin/initenv
+
+ONBUILD RUN set -o errexit -o nounset \
+  && sed -i "s|@GEOSUPPORT_HOME@|$GEOSUPPORT_HOME|g" $GEOSUPPORT_HOME/bin/initenv \
+  && chmod 755 $GEOSUPPORT_HOME/bin/initenv \
+  && cat $GEOSUPPORT_HOME/bin/initenv
+
