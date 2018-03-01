@@ -15,22 +15,38 @@ LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 # USE:
 #         Interactive Geosupport command line:
 #
-#         1. By default, this image runs the Geosupport CLI
+#         1. By default, this image runs DCP's built-in Geosupport CLI ($GEOSUPPORT_HOME/bin/goat)
 #
-#            $ docker run -it --name geosupport-<release>_<version> mlipper/geosupport-docker:<release_version>
+#            $ docker run -it --name geosupport mlipper/geosupport-docker:<release_version>
 #
 #         As a "volume container" (for programmatic access from another container):
 #
 #         2. Create your own container and reference the volume created by #1.
 #
-#            $ docker run --rm -it --name my-geocoder --volumes-from geosupport-<release>_<version> ubuntu:latest bash
+#            $ docker run --rm -it --name my-geocoder --volumes-from geosupport ubuntu:latest bash
 #
 #         3. Setup your container with the Geosupport environment variables
-#            (GEOSUPPORT_HOME, GEOFILES, GS_LIBRARY_PATH, and LD_LIBRARY_PATH);
+#            (GEOSUPPORT_HOME, GEOFILES, GS_LIBRARY_PATH, and LD_LIBRARY_PATH) by running:
 #
 #            $ . /opt/geosupport/bin/initenv
 #
-# 17d_17.4: digest: sha256:1a267ac91ecb2ae71cfd30e6194663afb9caf3a5a974c9881283bd7c47837be7 size: 1786
+# EXAMPLE:
+#
+#         TODO something
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
 #
 ENV GEOSUPPORT_RELEASE "17d"
 ENV GEOSUPPORT_VERSION "17.4"

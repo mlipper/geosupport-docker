@@ -1,24 +1,52 @@
 FROM debian:stretch
 LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
-# 
 #
-# This image does not declare a volume which is almost always necessary
-# for geosupport-docker to be useful at all. That is because all this
-# project does is allow one to have the Geosupport libraries and data
-# installed and (optionally) the environment configured.
+# BUILD:
 #
-# With that in mind, consider adding the following to your Dockerfile
-# which uses this as its base image:
+#         $ docker build -t mlipper/geosupport-docker:<release>_<version>
 #
-#   FROM geoclient-docker-onbuild:latest
-#   ...
-#   # Source shell script to export Geosupport environment
-#   CMD ["bash", "-c", ".", "/opt/geosupport/bin/initenv"]
-#   ...
-#   # After the above, declare volume for referencing with '--volumes-from...'
-#   VOLUME ["$GEOSUPPORT_HOME"]
+# OPTIONAL:
 #
-# For an example, see 'examples/Dockerfile-onbuild.example'
+#         -e DISTFILE=<file>        # Defaults to "gdelx_${GEOSUPPORT_RELEASE}.zip"
+#                                   # in the current directory.
+#
+#         -e GEOSUPPORT_HOME=<path> # Defaults to /opt/geosupport
+#
+# USE:
+#         Base image to install and configure Geosupport with sensible defaults:
+#
+#         This image does not declare a volume which is almost always
+#         necessary for geosupport-docker to be useful at all. That is
+#         because all this project does is allow one to have the Geosupport
+#         libraries and data installed and (optionally) the environment configured.
+#
+#         With that in mind, consider adding the following to your Dockerfile which uses this as its base image: 
+#
+#         FROM geoclient-docker-onbuild:latest
+#         ...
+#         # Source shell script to export Geosupport environment
+#         CMD ["bash", "-c", ".", "/opt/geosupport/bin/initenv"]
+#         ...
+#         # After the above, declare volume for referencing with '--volumes-from...'
+#         VOLUME ["$GEOSUPPORT_HOME"]
+#
+# EXAMPLE:
+#
+#         <my_project>/Dockerfile:
+#
+#         FROM mlipper/geosupport-docker-onbuild:latest
+#
+#         # Your stuff
+#         ...
+#
+#         # Mandatory after you're completely done modifying the file system
+#         # of your image. The volume location must be the same full
+#         # directory path as $GEOSUPPORT_RELEASE
+#         VOLUME ["/opt/geosupport"]
+#
+#         # Optional but the CMD is what sets up your ENV.
+#         CMD ["bash", "-c", ".", "/opt/geosupport/bin/initenv"]
+#         ENTRYPOINT ...
 #
 ENV GEOSUPPORT_RELEASE "17d"
 ENV GEOSUPPORT_VERSION "17.4"
@@ -37,12 +65,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-ENV PATH $GEOSUPPORT_HOME/bin:$PATH
-# Trailing '/' is required!
-ENV GEOFILES $GEOSUPPORT_HOME/fls/
-ENV GS_LIBRARY_PATH $GEOSUPPORT_HOME/lib
-ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
-
 WORKDIR $GEOSUPPORT_HOME
 ONBUILD RUN set -o errexit -o nounset \
   && echo "Installing Geosupport" \
@@ -51,6 +73,12 @@ ONBUILD RUN set -o errexit -o nounset \
   && unzip -qj /$DISTFILE "**/fls/*" -d $GEOSUPPORT_HOME/fls \
   && ln -nfs $GEOSUPPORT_HOME/bin/c_client $GEOSUPPORT_HOME/bin/goat \
   && rm /$DISTFILE
+
+ENV PATH $GEOSUPPORT_HOME/bin:$PATH
+# Trailing '/' is required!
+ENV GEOFILES $GEOSUPPORT_HOME/fls/
+ENV GS_LIBRARY_PATH $GEOSUPPORT_HOME/lib
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
 
 #
 # Add a bash script which can be sourced by another container to setup the
