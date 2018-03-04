@@ -48,8 +48,8 @@ LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 #         CMD ["bash", "-c", ".", "/opt/geosupport/bin/initenv"]
 #         ENTRYPOINT ...
 #
-ENV GEOSUPPORT_RELEASE "17d"
-ENV GEOSUPPORT_VERSION "17.4"
+ENV GEOSUPPORT_RELEASE "18a"
+ENV GEOSUPPORT_VERSION "18.1"
 ENV LANG C.UTF-8
 
 LABEL gsrelease $GEOSUPPORT_RELEASE
