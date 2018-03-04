@@ -1,4 +1,4 @@
-FROM mlipper/geosupport-docker-onbuild:latest
+FROM mlipper/geosupport-docker:latest-onbuild
 
 CMD ["bash", "-c", ".", "/opt/geosupport/bin/initenv"]
 VOLUME ["/opt/geosupport"]
