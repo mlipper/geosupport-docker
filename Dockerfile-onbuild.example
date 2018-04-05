@@ -1,5 +1,14 @@
 FROM mlipper/geosupport-docker:latest-onbuild
 
-CMD ["bash", "-c", ".", "/opt/geosupport/bin/initenv"]
-VOLUME ["/opt/geosupport"]
-ENTRYPOINT ["bash", "-c"]
+ENV GEOSUPPORT_HOME ${GEOSUPPORT_HOME:-/opt/geosupport}
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    unzip \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN env | sort && . $GEOSUPPORT_HOME/bin/initenv
+
+VOLUME ["$GEOSUPPORT_HOME"]
+
+CMD [goat]

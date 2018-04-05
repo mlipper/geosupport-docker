@@ -93,7 +93,7 @@ COPY initenv $GEOSUPPORT_HOME/bin/initenv
 RUN set -o errexit -o nounset \
   && sed -i "s|@GEOSUPPORT_HOME@|$GEOSUPPORT_HOME|g" $GEOSUPPORT_HOME/bin/initenv \
   && chmod 755 $GEOSUPPORT_HOME/bin/initenv \
-  && cat $GEOSUPPORT_HOME/bin/initenv
+  && . $GEOSUPPORT_HOME/bin/initenv
 
 VOLUME ["$GEOSUPPORT_HOME"]
 CMD ["goat"]
