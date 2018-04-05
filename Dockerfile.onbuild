@@ -103,7 +103,5 @@ ONBUILD RUN set -o errexit -o nounset \
   && ln -nfs $GEOSUPPORT_HOME/bin/c_client $GEOSUPPORT_HOME/bin/goat \
   && rm /$DISTFILE
 
-# Run
-ONBUILD RUN . $GEOSUPPORT_HOME/bin/initenv
-
-#ONBUILD VOLUME ["/opt/geosupport"]
+# RUN . $GEOSUPPORT_HOME/bin/initenv
+# VOLUME[$GEOSUPPORT_HOME]

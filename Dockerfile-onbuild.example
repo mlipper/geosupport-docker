@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     vim \
     && rm -rf /var/lib/apt/lists/*
 
-RUN env | sort && . $GEOSUPPORT_HOME/bin/initenv
+RUN ["/bin/bash", "-c", "source $GEOSUPPORT_HOME/bin/initenv"]
 
 VOLUME ["$GEOSUPPORT_HOME"]
 
