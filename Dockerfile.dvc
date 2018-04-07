@@ -1,0 +1,4 @@
+ARG VERSION=latest
+FROM mlipper/geosupport-docker:${VERSION}-onbuild
+ARG VERSION
+VOLUME ["$GEOSUPPORT_HOME"]
