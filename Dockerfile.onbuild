@@ -98,6 +98,8 @@ RUN set -o errexit -o nounset \
   && printf 'Contents of Geosupport initialization file %s\n\n' "$GEOSUPPORT_HOME/bin/initenv" \
   && cat $GEOSUPPORT_HOME/bin/initenv
 
+WORKDIR /
+
 ONBUILD COPY $DISTFILE /$DISTFILE
 
 ONBUILD RUN set -o errexit -o nounset \
