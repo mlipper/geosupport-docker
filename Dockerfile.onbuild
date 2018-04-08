@@ -3,11 +3,10 @@ LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 #
 # BUILD:
 #
-#         $ docker build -t mlipper/geosupport-docker:<image_version> \
-#                  < --build-arg | -e > GEOSUPPORT_RELEASE=<release> \
-#                  < --build-arg | -e > GEOSUPPORT_VERSION=<version>
+#         $ docker build -t mlipper/geosupport-docker:<image_version>
 #
-# ARGS:
+# RUN:
+#     ARG:
 #
 #         --build-arg GEOSUPPORT_RELEASE=<release>  # Geosupport data release
 #                                                   # If not set/given, an
@@ -19,7 +18,7 @@ LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 #                                                   # environment variable
 #                                                   # of the same name is used.
 #
-# ENV:
+#     ENV:
 #
 #         -e GEOSUPPORT_RELEASE=<release>  # Geosupport data release.
 #                                          # Can also be given as a build arg.

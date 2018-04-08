@@ -14,13 +14,13 @@
 #   # Create a volume
 #   $ docker volume create --label gsversion=18.1 \
 #                          --label gsrelease=18a \
-#                          --name gsvol
+#                          --name gsvolume-18a_18.1
 #
 #   # Container mount should match GEOSUPPORT_HOME used with "onbuild" parent
-#   $ docker run -d --name geosupport --volume gsvol:/opt/geosupport
+#   $ docker run -d --name geosupport --volume gsvolume-18a_18.1:/opt/geosupport
 #
 ARG VERSION=latest
-FROM mlipper/geosupport-docker:${version}-onbuild
+FROM mlipper/geosupport-docker:${VERSION}-onbuild
 LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 
 #
