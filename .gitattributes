@@ -1,0 +1,4 @@
+initenv
+*.sh eol=lf
+Dockerfile* eol=lf
+
