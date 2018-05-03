@@ -1,15 +1,25 @@
 #
 # EXAMPLES:
 #
-# Runs latest version in a bash shell using existing volume 'vol-geosupport'
-# (assumes parent was built with GEOSUPPORT_HOME=/opt/geosupport).
+#   BUILD `latest`
 #
-#     $ docker run -ti --name geosupport -v vol-geosupport:/opt/geosupport mlipper/geosupport-docker bash 
+#     # Uses 'latest' for parent image by default
+#     $ docker build -t mlipper/geosupport-docker .
 #
-# Runs the default 'goat' command with r18a1/v18.1 (assumes you are also
-# invoking Docker from a bash-like shell).
-# 
-#     $ V=18a1_18.1; docker run --rm -ti --build-arg GSD_VERSION=$V mlipper/geosupport-docker:$V
+#   RUN `latest`
+#
+#     # Run the Geosupport CLI
+#     $ docker run -d --name geosupport mlipper/geosupport-docker:latest
+#
+#   BUILD `<version>`
+#
+#     # Use '--build-arg' to reference the correct parent image
+#     $ docker build -t mlipper/geosupport-docker:18a1_18.1 --build-arg GSD_VERSION=18a1_18.1 .
+#
+#   RUN `<version>`
+#
+#     # Run the Geosupport CLI 'goat'
+#     $ docker run -d --name geosupport mlipper/geosupport-docker:18a1_18.1
 #
 ARG GSD_VERSION=latest
 FROM mlipper/geosupport-docker:${GSD_VERSION}-onbuild
