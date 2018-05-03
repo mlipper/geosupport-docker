@@ -12,9 +12,7 @@
 #     $ V=18a1_18.1; docker run --rm -ti --build-arg GSD_VERSION=$V mlipper/geosupport-docker:$V
 #
 ARG GSD_VERSION=latest
-
 FROM mlipper/geosupport-docker:${GSD_VERSION}-onbuild
-
 LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 
 VOLUME ["$GEOSUPPORT_HOME"]

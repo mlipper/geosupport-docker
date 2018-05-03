@@ -1,33 +1,30 @@
 #
-# Build with default version "latest":
+# Build (uses "latest" for parent image by default):
 #
 #  $ docker build -t mlipper/geosupport-docker:latest-dvc -f Dockerfile.dvc .
 #
-# Build version 18a1_18.1:
+# Start a "data volume container" which creates and populates a shareable volume:
+#
+#  $ docker run -d --name geosupport \
+#                  --mount src=vol-geosupport,target=/opt/geosupport \
+#                  mlipper/geosupport-docker:latest-dvc
+#
+# [Same as above but versioned]
+#
+# Build a specific version using "--build-arg" with the Docker build command
 #
 #   $ V=18a1_18.1; docker build -t mlipper/geosupport-docker:${V}-dvc \
 #                             --build-arg GSD_VERSION=${V} \
 #                             -f Dockerfile.dvc .
 #
-# Can be used to populate a shared "data volume container":
+# Start a "data volume container" using the versioned image
 #
-#   # Create a volume
-#   $ docker volume create --label gsversion=18.1 \
-#                          --label gsrelease=18a1 \
-#                          --name gsvolume-18a1_18.1
-#
-#   # Container mount should match GEOSUPPORT_HOME used with "onbuild" parent
-#   $ docker run -d --name geosupport --volume gsvolume-18a1_18.1:/opt/geosupport
+#   $ V=18a1_18.1; docker run -d --name geosupport \
+#                             --mount src=vol-geosupport,target=/opt/geosupport \
+#                             mlipper/geosupport-docker:${V}-dvc
 #
 ARG GSD_VERSION=latest
 FROM mlipper/geosupport-docker:${GSD_VERSION}-onbuild
 LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
-
-#
-# Note-to-self on alternative:
-#
-# ARG GSD_VERSION
-# VOLUME ["${GEOSUPPORT_HOME}-${GSD_VERSION}"]
-#
 
 VOLUME ["$GEOSUPPORT_HOME"]
