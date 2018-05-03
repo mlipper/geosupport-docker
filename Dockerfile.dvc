@@ -3,9 +3,9 @@
 #
 #  $ docker build -t mlipper/geosupport-docker:latest-dvc -f Dockerfile.dvc .
 #
-# Build version 18a_18.1:
+# Build version 18a1_18.1:
 #
-#   $ V=18a_18.1; docker build -t mlipper/geosupport-docker:${V}-dvc \
+#   $ V=18a1_18.1; docker build -t mlipper/geosupport-docker:${V}-dvc \
 #                             --build-arg GSD_VERSION=${V} \
 #                             -f Dockerfile.dvc .
 #
@@ -13,11 +13,11 @@
 #
 #   # Create a volume
 #   $ docker volume create --label gsversion=18.1 \
-#                          --label gsrelease=18a \
-#                          --name gsvolume-18a_18.1
+#                          --label gsrelease=18a1 \
+#                          --name gsvolume-18a1_18.1
 #
 #   # Container mount should match GEOSUPPORT_HOME used with "onbuild" parent
-#   $ docker run -d --name geosupport --volume gsvolume-18a_18.1:/opt/geosupport
+#   $ docker run -d --name geosupport --volume gsvolume-18a1_18.1:/opt/geosupport
 #
 ARG GSD_VERSION=latest
 FROM mlipper/geosupport-docker:${GSD_VERSION}-onbuild
