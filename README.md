@@ -105,32 +105,35 @@ directory.
 
 ## Dockerfile.dvc
 
-Dockerfile which can be used to populate a pre-defined, [standalone Docker
-volume](https://docs.docker.com/engine/reference/commandline/volume_create) or 
-to create a ["data-packed volume container"](https://medium.com/on-docker/data-packed-volume-containers-distribute-configuration-c23ff80987cd)
-as described by author Jeff Nickoloff in his book [Docker in Action](https://www.manning.com/books/docker-in-action).
+Dockerfile which simplifies creating and/or populating Docker `VOLUME`s meant to be shared by multiple containers. This is often helpful in production environments; e.g., to upgrade Geosupport library and data files without stopping app containers using these volumes via Docker's logical reference functionality.
+
+Inspired by the ["data-packed volume container"](https://medium.com/on-docker/data-packed-volume-containers-distribute-configuration-c23ff80> as described by author Jeff Nickoloff in his book [Docker in Action](https://www.manning.com/books/docker-in-action).
 
 BUILD:
 
-Build with default version "latest":
-
- $ docker build -t mlipper/geosupport-docker:latest-dvc -f Dockerfile.dvc .
-
-Build version 18a_18.1:
-
-  $ V=18a_18.1; docker build -t mlipper/geosupport-docker:${V}-dvc \
-                            --build-arg VERSION=${V} \
-                            -f Dockerfile.dvc .
-
-Can be used to populate a shared "data volume container":
-
-  # Create a volume
-  $ docker volume create --label gsversion=18.1 \
-                         --label gsrelease=18a \
-                         --name gsvolume-18a_18.1
-
-  # Container mount should match GEOSUPPORT_HOME used with "onbuild" parent
-  $ docker run -d --name geosupport --volume gsvolume-18a_18.1:/opt/geosupport
+Build (uses "latest" for parent image by default):                            
+                                                                              
+ $ docker build -t mlipper/geosupport-docker:latest-dvc -f Dockerfile.dvc .   
+                                                                              
+Start a "data volume container" which creates and populates a shareable volume:
+                                                                              
+ $ docker run -d --name geosupport \                                          
+                 --mount src=vol-geosupport,target=/opt/geosupport \          
+                 mlipper/geosupport-docker:latest-dvc                         
+                                                                              
+[Same as above but versioned]                                                 
+                                                                              
+Build a specific version using "--build-arg" with the Docker build command    
+                                                                              
+  $ V=18a1_18.1; docker build -t mlipper/geosupport-docker:${V}-dvc \         
+                            --build-arg GSD_VERSION=${V} \                    
+                            -f Dockerfile.dvc .                               
+                                                                              
+Start a "data volume container" using the versioned image                     
+                                                                              
+  $ V=18a1_18.1; docker run -d --name geosupport \                            
+                            --mount src=vol-geosupport,target=/opt/geosupport \  
+                            mlipper/geosupport-docker:${V}-dvc
 
 ## Dockerfile
 
