@@ -109,36 +109,51 @@ Dockerfile which simplifies creating and/or populating Docker `VOLUME`s meant to
 
 Inspired by the ["data-packed volume container"](https://medium.com/on-docker/data-packed-volume-containers-distribute-configuration-c23ff80> as described by author Jeff Nickoloff in his book [Docker in Action](https://www.manning.com/books/docker-in-action).
 
-BUILD:
+EXAMPLES:
 
-  Build (uses "latest" for parent image by default):
-                          
+  BUILD `latest-dvc`
+
+    # Uses 'latest' for parent image by default                          
     $ docker build -t mlipper/geosupport-docker:latest-dvc -f Dockerfile.dvc .
 
-  Start a "data volume container" which creates and populates a shareable volume:
+  RUN `latest-dvc`
+  
+    # Start a "data volume container" which creates and populates a shareable volume
+    $ docker run -d --name geosupport \
+                    --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:latest-dvc
 
-    $ docker run -d --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:latest-dvc
+  BUILD `<version>-dvc`
 
-[Same as above but versioned]
-                    
-Build a specific version using "--build-arg" with the Docker build command
-    
-  $ V=18a1_18.1; docker build -t mlipper/geosupport-docker:${V}-dvc --build-arg GSD_VERSION=${V} -f Dockerfile.dvc .
+    # Use '--build-arg' to reference the correct parent image
+    $ V=18a1_18.1; docker build -t mlipper/geosupport-docker:${V}-dvc \
+                    --build-arg GSD_VERSION=${V} -f Dockerfile.dvc .
 
-Start a "data volume container" using the versioned image
+  RUN `version>-dvc`
 
-  $ V=18a1_18.1; docker run -d --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:${V}-dvc
+    # Start a "data volume container" which creates and populates a shareable volume
+    $ V=18a1_18.1; docker run -d --name geosupport \
+                    --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:${V}-dvc
 
 ## Dockerfile
 
 EXAMPLES:
 
-Runs latest version in a bash shell using existing volume 'vol-geosupport'
-(assumes parent was built with GEOSUPPORT_HOME=/opt/geosupport).
+  BUILD `latest`
 
-    $ docker run -ti --name geosupport -v vol-geosupport:/opt/geosupport mlipper/geosupport-docker bash
+    # Uses 'latest' for parent image by default                        
+    $ docker build -t mlipper/geosupport-docker .
 
-Runs the default 'goat' command with r18a/v18.1 (assumes you are also
-invoking Docker from a bash-like shell).
+  RUN `latest`
 
-    $ V=18a_18.1; docker run --rm -ti --build-arg VERSION=$V mlipper/geosupport-docker:$V
+    # Run the Geosupport CLI
+    $ docker run -d --name geosupport mlipper/geosupport-docker:latest
+
+  BUILD `<version>`
+
+    # Use '--build-arg' to reference the correct parent image
+    $ docker build -t mlipper/geosupport-docker:18a1_18.1 --build-arg GSD_VERSION=18a1_18.1 .
+
+  RUN `<version>`
+
+    # Run the Geosupport CLI
+    $ docker run -d --name geosupport mlipper/geosupport-docker:18a1_18.1
