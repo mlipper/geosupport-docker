@@ -1,30 +1,20 @@
 #
-# EXAMPLES:
+# BUILD
 #
-#   BUILD `latest`
+#   # Uses 'latest' for parent image by default
+#   $ docker build -t mlipper/geosupport-docker .
 #
-#     # Uses 'latest' for parent image by default
-#     $ docker build -t mlipper/geosupport-docker .
+# RUN
 #
-#   RUN `latest`
+#   # Run the Geosupport CLI (i.e. "goat")
+#   $ docker run -it --rm geosupport mlipper/geosupport-docker goat
 #
-#     # Run the Geosupport CLI
-#     $ docker run -d --name geosupport mlipper/geosupport-docker:latest
-#
-#   BUILD `<version>`
-#
-#     # Use '--build-arg' to reference the correct parent image
-#     $ docker build -t mlipper/geosupport-docker:18a1_18.1 --build-arg GSD_VERSION=18a1_18.1 .
-#
-#   RUN `<version>`
-#
-#     # Run the Geosupport CLI 'goat'
-#     $ docker run -d --name geosupport mlipper/geosupport-docker:18a1_18.1
+#   # Create a "data volume container" to populate a shareable volume
+#   $ docker run -d --name geosupport \
+#                   --mount src=vol-geosupport,target=/opt/geosupport \
+#                   mlipper/geosupport-docker
 #
 ARG GSD_VERSION=latest
 FROM mlipper/geosupport-docker:${GSD_VERSION}-onbuild
 LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
-
 VOLUME ["$GEOSUPPORT_HOME"]
-
-CMD ["goat"]

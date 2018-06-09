@@ -1,21 +1,28 @@
-#!/usr/bin/env bash
-
 export GEOSUPPORT_HOME=@GEOSUPPORT_HOME@
 export GEOFILES=$GEOSUPPORT_HOME/fls/
 export GS_LIBRARY_PATH=$GEOSUPPORT_HOME/lib
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
 export PATH=$PATH:$GEOSUPPORT_HOME/bin
 
-function gslibinstall {
+echo "Geosupport environment:"
+echo GEOSUPPORT_HOME=$GEOSUPPORT_HOME
+echo GEOFILES=$GEOFILES
+echo GS_LIBRARY_PATH=$GS_LIBRARY_PATH
+
+echo "System runtime environment:"
+echo PATH=$PATH
+
+#
+# By default, Geosupport libs use the LD_LIBRARY_PATH environment variable.
+# If this script is called with an argument, ldconfig is used instead.
+#
+use_ldconfig=$1
+
+if [ -n "$use_ldconfig" ]; then
   # Will fail if not run as root
   echo $GS_LIBRARY_PATH > /etc/ld.so.conf.d/geosupport.conf
   ldconfig
-}
-
-function gsconf {
-  echo GEOSUPPORT_HOME=$GEOSUPPORT_HOME
-  echo GEOFILES=$GEOFILES
-  echo GS_LIBRARY_PATH=$GS_LIBRARY_PATH
+  echo "$(ldconfig -p | grep -i geosupport)"
+else
+  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
   echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-  echo PATH=$PATH
-}
+fi

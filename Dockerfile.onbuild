@@ -53,7 +53,7 @@ LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 #         with --volumes-from). With that in mind, consider adding the
 #         following to your Dockerfile which uses this as its base image:
 #
-#         FROM geoclient-docker-onbuild:latest
+#         FROM geoclient-docker:latest-onbuild
 #         ...
 #         # Commands that change the filesystem you want in the volume
 #         ...
@@ -99,7 +99,7 @@ RUN set -o errexit -o nounset \
 
 WORKDIR /
 
-ONBUILD COPY $DISTFILE /$DISTFILE
+COPY $DISTFILE /$DISTFILE
 
 ONBUILD RUN set -o errexit -o nounset \
   && echo "Installing Geosupport" \

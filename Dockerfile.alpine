@@ -1,0 +1,55 @@
+FROM alpine:latest
+
+LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
+
+ENV GEOSUPPORT_RELEASE ${GEOSUPPORT_RELEASE:-18a1}
+
+ENV GEOSUPPORT_VERSION ${GEOSUPPORT_VERSION:-18.1}
+
+ENV DISTFILE ${DISTFILE:-"gdelx_${GEOSUPPORT_RELEASE}.zip"}
+
+ENV GEOSUPPORT_HOME ${GEOSUPPORT_HOME:-/opt/geosupport}
+
+ENV LANG C.UTF-8
+
+LABEL gsrelease $GEOSUPPORT_RELEASE
+
+LABEL gsversion $GEOSUPPORT_VERSION
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR $GEOSUPPORT_HOME
+
+ENV PATH $GEOSUPPORT_HOME/bin:$PATH
+# Trailing '/' is required!
+ENV GEOFILES $GEOSUPPORT_HOME/fls/
+
+ENV GS_LIBRARY_PATH $GEOSUPPORT_HOME/lib
+
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
+
+COPY initenv $GEOSUPPORT_HOME/bin/initenv
+
+RUN set -o errexit -o nounset \
+  && sed -i "s|@GEOSUPPORT_HOME@|$GEOSUPPORT_HOME|g" $GEOSUPPORT_HOME/bin/initenv \
+  && chmod 755 $GEOSUPPORT_HOME/bin/initenv \
+  && printf 'Contents of Geosupport initialization file %s\n\n' "$GEOSUPPORT_HOME/bin/initenv" \
+  && cat $GEOSUPPORT_HOME/bin/initenv
+
+WORKDIR /
+
+COPY $DISTFILE /$DISTFILE
+
+RUN set -o errexit -o nounset \
+  && echo "Installing Geosupport" \
+  && unzip -qj /$DISTFILE "**/bin/*" -d $GEOSUPPORT_HOME/bin \
+  && unzip -qj /$DISTFILE "**/lib/*" -d $GEOSUPPORT_HOME/lib \
+  && unzip -qj /$DISTFILE "**/fls/*" -d $GEOSUPPORT_HOME/fls \
+  && ln -nfs $GEOSUPPORT_HOME/bin/c_client $GEOSUPPORT_HOME/bin/goat \
+  && rm /$DISTFILE
+
+COPY --from=build "$GEOSUPPORT_HOME" "$GEOSUPPORT_HOME"
+
+VOLUME ["$GEOSUPPORT_HOME"]
