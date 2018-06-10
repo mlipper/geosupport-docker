@@ -16,7 +16,7 @@ The latest news about this project.
 
   * **Versioning policy changed:** this project will no longer mimic Geosupport's `<year>.<alpha><patch>_<year>.<quarter><patch>` release/version naming convention. Instead, Docker image versioning will follow the basic approach recommended by [Semantic Versioning](https://semver.org/). The next official release will be tagged version `1.0.0` and contain DCP's Geosupport `18a1_18.1`. Docker labels `gsrelease` and `gsversion` will be used to provide Geosupport version metadata.
   * **ONBUILD and default `Dockerfile`s now include Geosupport install:** the `Dockerfile.onbuild` file has been updated so that the image now includes the ~300MB Geosupport Linux distribution zip file. When using this as a parent image or the default `Dockerfile` image definition, it is no longer necessary to download this file from DCP as described below.
-  * **New `alpine` based image:** the `Dockerfile.alpine` file defines a image based on the popular `alpine` project. 
+  * **New `alpine` based image:** the `Dockerfile.alpine` file defines a image based on the popular `alpine` project.
 
 ### Download Geosupport for Linux from DCP Site
 
@@ -50,13 +50,13 @@ Dockerfile which uses this as its base image:
 
 Because Docker's `COPY` instruction is used to copy the specified `DISTFILE` into the container, it must be in or under the extending image's build context directory.
 
-See the comments in (Dockerfile.onbuild)[https://github.com/mlipper/geosupport-docker/blob/master/Dockerfile.onbuild] for more details.
+See the comments in [Dockerfile.onbuild](https://github.com/mlipper/geosupport-docker/blob/master/Dockerfile.onbuild) for more details.
 
 ## Dockerfile
 
-Dockerfile which can be used to run Geosupport interactively from the command line or to simplify the creation and population of Docker `VOLUME`s meant to be shared by multiple containers. This is often helpful in production environments; e.g., to upgrade Geosupport library and data files without stopping app containers using these volumes via Docker's logical reference functionality. Inspired by the ["data-packed volume container"](https://medium.com/on-docker/data-packed-volume-containers-distribute-configuration-c23ff80> as described by author Jeff Nickoloff in his book [Docker in Action](https://www.manning.com/books/docker-in-action).
+Dockerfile which can be used to run Geosupport interactively from the command line or to simplify the creation and population of Docker `VOLUME`s meant to be shared by multiple containers. This is often helpful in production environments; e.g., to upgrade Geosupport library and data files without stopping app containers using these volumes via Docker's logical reference functionality. Inspired by the ["data-packed volume container"](https://medium.com/on-docker/data-packed-volume-containers-distribute-configuration-c23ff80) as described by author Jeff Nickoloff in his book [Docker in Action](https://www.manning.com/books/docker-in-action).
 
-See the comments in (Dockerfile.onbuild)[https://github.com/mlipper/geosupport-docker/blob/master/Dockerfile] for more details.
+See the comments in [Dockerfile.onbuild](https://github.com/mlipper/geosupport-docker/blob/master/Dockerfile) for more details.
 
 ## Dockerfile.apline
 
