@@ -14,9 +14,9 @@ The latest news about this project.
 
 #### June 9th, 2018
 
-  * **Versioning policy changed:** this project will no longer mimic Geosupport's `<year>.<alpha><patch>_<year>.<quarter><patch>` release/version naming convention. Instead, Docker image versioning will follow the basic approach recommended by [Semantic Versioning](https://semver.org/). The next official release will be tagged version `1.0.0` and contain DCP's Geosupport `18a1_18.1`. Docker labels `gsrelease` and `gsversion` will be used to provide Geosupport version metadata.
-  * **ONBUILD and default `Dockerfile`s now include Geosupport install:** the `Dockerfile.onbuild` file has been updated so that the image now includes the ~300MB Geosupport Linux distribution zip file. When using this as a parent image or the default `Dockerfile` image definition, it is no longer necessary to download this file from DCP as described below.
-  * **New `alpine` based image:** the `Dockerfile.alpine` file defines a image based on the popular `alpine` project.
+* **Versioning policy changed:** this project will no longer mimic Geosupport's `<year>.<alpha><patch>_<year>.<quarter><patch>` release/version naming convention. Instead, Docker image versioning will follow the basic approach recommended by [Semantic Versioning](https://semver.org/). The next official release will be tagged version `1.0.0` and contain DCP's Geosupport `18a1_18.1`. Docker labels `gsrelease` and `gsversion` will be used to provide Geosupport version metadata.
+* **ONBUILD and default `Dockerfile`s now include Geosupport install:** the `Dockerfile.onbuild` file has been updated so that the image now includes the ~300MB Geosupport Linux distribution zip file. When using this as a parent image or the default `Dockerfile` image definition, it is no longer necessary to download this file from DCP as described below.
+* **New `alpine` based image:** the `Dockerfile.alpine` file defines a image based on the popular `alpine` project.
 
 ### Download Geosupport for Linux from DCP Site
 
