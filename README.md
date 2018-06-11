@@ -57,7 +57,3 @@ See the comments in [Dockerfile.onbuild](https://github.com/mlipper/geosupport-d
 Dockerfile which can be used to run Geosupport interactively from the command line or to simplify the creation and population of Docker `VOLUME`s meant to be shared by multiple containers. This is often helpful in production environments; e.g., to upgrade Geosupport library and data files without stopping app containers using these volumes via Docker's logical reference functionality. Inspired by the ["data-packed volume container"](https://medium.com/on-docker/data-packed-volume-containers-distribute-configuration-c23ff80) as described by author Jeff Nickoloff in his book [Docker in Action](https://www.manning.com/books/docker-in-action).
 
 See the comments in [Dockerfile.onbuild](https://github.com/mlipper/geosupport-docker/blob/master/Dockerfile) for more details.
-
-## Dockerfile.apline
-
-Similar to the pervious `Dockerfile` except built from `alpine:latest` parent image, offering a smaller footprint. Note, `apline` uses the `musl` C Runtime which do not seem to be a problem for the Geosupport libraries.
