@@ -28,7 +28,11 @@
 #
 #         -e DISTFILE=<file>               # DCP's compressed (.zip) Geosupport
 #                                          # for Linux. Defaults to:
-#                                          # gdelx_${GEOSUPPORT_RELEASE}.zip
+#                                          # linux_geo${GEOSUPPORT_RELEASE}_${GEOSUPPORT_VERSION}.zip
+#
+#          When building this image from source, the zip file downloaded from
+#          DCP's site may need to be renamed for the default DISTFILE name to
+#          match.
 #
 #          Because Docker's COPY instruction is used to copy the specified
 #          DISTFILE into the container, it must be in or under Docker's
@@ -62,13 +66,13 @@ FROM debian:stretch
 LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 
 ARG GEOSUPPORT_RELEASE
-ENV GEOSUPPORT_RELEASE ${GEOSUPPORT_RELEASE:-18a1}
+ENV GEOSUPPORT_RELEASE ${GEOSUPPORT_RELEASE:-18d}
 
 ARG GEOSUPPORT_VERSION
-ENV GEOSUPPORT_VERSION ${GEOSUPPORT_VERSION:-18.1}
+ENV GEOSUPPORT_VERSION ${GEOSUPPORT_VERSION:-18.4}
 
 ARG DISTFILE
-ENV DISTFILE ${DISTFILE:-"gdelx_${GEOSUPPORT_RELEASE}.zip"}
+ENV DISTFILE ${DISTFILE:-"linux_geo${GEOSUPPORT_RELEASE}_${GEOSUPPORT_VERSION}.zip"}
 
 ARG GEOSUPPORT_HOME
 ENV GEOSUPPORT_HOME ${GEOSUPPORT_HOME:-/opt/geosupport}
