@@ -39,7 +39,8 @@ This image now includes the `DISTFILE` containing the zipped Geosupport software
 
 This image intentionally does NOT declare a volume so that extending images can further modify the filesystem and/or decide whether or not to persist the `GEOSUPPORT_HOME` as a `VOLUME`.
 
-    Note: The compressed Geosupport Linux zip file is almost 200M and the uncompressed size of the installation is over 2G.
+    NOTE:  The compressed Geosupport Linux zip file is almost 200M and the uncompressed
+           size of the installation is over 2G.
 
 Dockerfile which uses this as its base image:
 
