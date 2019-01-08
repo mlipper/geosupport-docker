@@ -24,9 +24,9 @@ For some image flavors, working with `geosupport-docker` requires that you have 
 
 Geosupport is free to downloaded from the [Open Data -> Geocoding Application](http://www1.nyc.gov/site/planning/data-maps/open-data.page#geocoding_application)" section of DCP's site. **Note:** *DCP requires a form be filled out **every** time you download anything.*
 
-Remember to download the **Linux** distribution as the Windows flavors will not work for this project. Don't be surprised if the description refers to the "Geosupport Desktop Edition&trade;". As long as it's the Linux 64 bit distribution (`gdelx_<version>.zip`), you are good to go.
+Remember to download the **Linux** distribution as the Windows flavors will not work for this project. Don't be surprised if the description refers to the "Geosupport Desktop Edition&trade;". As long as it's the Linux 64 bit distribution (currently named something like `linux_geo<release>_<version>.zip`), you are good to go.
 
-**IMPORTANT:** Save the downloaded zip file (`gdelx_<version>.zip`) to the directory containing the Dockerfile for the image/container you are going to build/run.
+**IMPORTANT:** Save the downloaded zip file to the directory containing the Dockerfile for the image/container you are going to build/run. Pay attention to the file name because it may not match the default used when building the `-onbuild` image. In that case, use the `-e DISTFILE=<file>` argument when invoking `$ docker build ...`.
 
 ## Dockerfile.onbuild
 
