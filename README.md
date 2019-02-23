@@ -12,8 +12,8 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 
 The latest news about this project.
 
-#### January 9th, 2018
-* **Skipping over versions 1.0.1...1.0.5:** The next `geosupport-docker` release will be `1.0.6` which wraps DCP's `Geosupport 18d_18.4`. Versions were skipped to allow for the possibility of creating images for Geosupport distributions that were released after `18a1_18.1` and before `18d_18.4`.
+#### February 24th, 2019
+**Version 1.0.1 available.** This release wraps `Geosupport 18d_18.4`.
 
 #### June 9th, 2018
 

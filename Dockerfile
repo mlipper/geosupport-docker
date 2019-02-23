@@ -4,6 +4,9 @@
 #   # Uses 'latest' for parent image by default
 #   $ docker build -t mlipper/geosupport-docker .
 #
+#   # Uses '1.0.1' for parent image
+#   $ docker build --build-arg GSD_VERSION=1.0.1 -t mlipper/geosupport-docker:1.0.1 .
+#
 # RUN
 #
 #   # Run the Geosupport CLI (i.e. "goat")
