@@ -10,7 +10,7 @@
 # RUN
 #
 #   # Run the Geosupport CLI (i.e. "goat")
-#   $ docker run -it --rm geosupport mlipper/geosupport-docker goat
+#   $ docker run -it --rm mlipper/geosupport-docker goat
 #
 #   # Create a "data volume container" to populate a shareable volume
 #   $ docker run -d --name geosupport \
