@@ -13,7 +13,8 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 The latest news about this project.
 
 #### February 24th, 2019
-**Version 1.0.1 available.** This release wraps `Geosupport 18d_18.4`.
+* **Version 1.0.2 available.** This release wraps `Geosupport 19a_19.1`.
+* **Version 1.0.1 available.** This release wraps `Geosupport 18d_18.4`.
 
 #### June 9th, 2018
 
