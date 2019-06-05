@@ -2,9 +2,9 @@
 # BUILD:
 #
 #         #
-#         # Example: build version 1.0.3
+#         # Example: build version 1.0.4
 #         #
-#         $ docker build -t mlipper/geosupport-docker:1.0.3-onbuild -f Dockerfile.onbuild .
+#         $ docker build -t mlipper/geosupport-docker:1.0.4-onbuild -f Dockerfile.onbuild .
 #
 # RUN:
 #     ARG:
@@ -69,10 +69,10 @@ FROM debian:stretch
 LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 
 ARG GEOSUPPORT_RELEASE
-ENV GEOSUPPORT_RELEASE ${GEOSUPPORT_RELEASE:-19a1}
+ENV GEOSUPPORT_RELEASE ${GEOSUPPORT_RELEASE:-19b}
 
 ARG GEOSUPPORT_VERSION
-ENV GEOSUPPORT_VERSION ${GEOSUPPORT_VERSION:-19.1}
+ENV GEOSUPPORT_VERSION ${GEOSUPPORT_VERSION:-19.2}
 
 ARG DISTFILE
 ENV DISTFILE ${DISTFILE:-"linux_geo${GEOSUPPORT_RELEASE}_${GEOSUPPORT_VERSION}.zip"}
