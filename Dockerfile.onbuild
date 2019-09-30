@@ -2,12 +2,17 @@
 # BUILD:
 #
 #         #
-#         # Example: build version 1.0.4
+#         # Example: build version 1.0.5
 #         #
-#         $ docker build -t mlipper/geosupport-docker:1.0.4-onbuild -f Dockerfile.onbuild .
+#         $ docker build -t mlipper/geosupport-docker:1.0.5-onbuild \
+#               --build-arg GSD_VERSION=1.0.5 \
+#               -f Dockerfile.onbuild .
 #
 # RUN:
 #     ARG:
+#
+#         --build-arg GSD_VERSION=<project_version> # REQUIRED
+#                                                   # Version of this project.
 #
 #         --build-arg GEOSUPPORT_RELEASE=<release>  # Geosupport data release
 #                                                   # If not set/given, an
@@ -29,17 +34,18 @@
 #
 #         -e GEOSUPPORT_HOME=<path>        # Defaults to /opt/geosupport
 #
-#         -e DISTFILE=<file>               # DCP's compressed (.zip) Geosupport
+#         -e GEOSUPPORT_DISTFILE=<file>    # DCP's compressed (.zip) Geosupport
 #                                          # for Linux. Defaults to:
 #                                          # linux_geo${GEOSUPPORT_RELEASE}_${GEOSUPPORT_VERSION}.zip
 #
 #          When building this image from source, the zip file downloaded from
-#          DCP's site may need to be renamed for the default DISTFILE name to
-#          match.
+#          DCP's site may need to be renamed for the default GEOSUPPORT_DISTFILE
+#          name to match.
 #
 #          Because Docker's COPY instruction is used to copy the specified
-#          DISTFILE into the container, it must be in or under Docker's
-#          build context directory (i.e, the same directory as this file).
+#          GEOSUPPORT_DISTFILE into the container, it must be in or under
+#          Docker's build context directory (i.e, the same directory as this
+#          file).
 #
 # NOTES:
 #
@@ -69,19 +75,20 @@ FROM debian:stretch
 LABEL maintainer "Matthew Lipper <mlipper@gmail.com>"
 
 ARG GEOSUPPORT_RELEASE
-ENV GEOSUPPORT_RELEASE ${GEOSUPPORT_RELEASE:-19b}
+ENV GEOSUPPORT_RELEASE ${GEOSUPPORT_RELEASE:-19c}
 
 ARG GEOSUPPORT_VERSION
-ENV GEOSUPPORT_VERSION ${GEOSUPPORT_VERSION:-19.2}
+ENV GEOSUPPORT_VERSION ${GEOSUPPORT_VERSION:-19.3}
 
-ARG DISTFILE
-ENV DISTFILE ${DISTFILE:-"linux_geo${GEOSUPPORT_RELEASE}_${GEOSUPPORT_VERSION}.zip"}
+ARG GEOSUPPORT_DISTFILE
+ENV GEOSUPPORT_DISTFILE ${GEOSUPPORT_DISTFILE:-"geo${GEOSUPPORT_RELEASE}_${GEOSUPPORT_VERSION}.zip"}
 
 ARG GEOSUPPORT_HOME
 ENV GEOSUPPORT_HOME ${GEOSUPPORT_HOME:-/opt/geosupport}
 
 ENV LANG C.UTF-8
 
+LABEL version $GSD_VERSION
 LABEL gsrelease $GEOSUPPORT_RELEASE
 LABEL gsversion $GEOSUPPORT_VERSION
 
@@ -107,14 +114,14 @@ RUN set -o errexit -o nounset \
 
 WORKDIR /
 
-COPY $DISTFILE /$DISTFILE
+COPY $GEOSUPPORT_DISTFILE /$GEOSUPPORT_DISTFILE
 
 ONBUILD RUN set -o errexit -o nounset \
   && echo "Installing Geosupport" \
-  && unzip -qj /$DISTFILE "**/bin/*" -d $GEOSUPPORT_HOME/bin \
-  && unzip -qj /$DISTFILE "**/lib/*" -d $GEOSUPPORT_HOME/lib \
-  && unzip -qj /$DISTFILE "**/fls/*" -d $GEOSUPPORT_HOME/fls \
+  && unzip -qj /$GEOSUPPORT_DISTFILE "**/bin/*" -d $GEOSUPPORT_HOME/bin \
+  && unzip -qj /$GEOSUPPORT_DISTFILE "**/lib/*" -d $GEOSUPPORT_HOME/lib \
+  && unzip -qj /$GEOSUPPORT_DISTFILE "**/fls/*" -d $GEOSUPPORT_HOME/fls \
   && ln -nfs $GEOSUPPORT_HOME/bin/c_client $GEOSUPPORT_HOME/bin/goat \
-  && rm /$DISTFILE
+  && rm /$GEOSUPPORT_DISTFILE
 
 ONBUILD RUN ["/bin/bash", "-c", "source $GEOSUPPORT_HOME/bin/initenv"]

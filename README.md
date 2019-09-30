@@ -12,6 +12,18 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 
 The latest news about this project.
 
+#### September 28th, 2019
+* **Version 1.0.5 available.** This release wraps `Geosupport 19c_19.3`.
+
+**CHANGES:**
+
+> * Renamed environment variable `DISTFILE` to `GEOSUPPORT_DISTFILE`.
+> * New environment variable `GEOSUPPORT_DISTFILE_TYPE` to enable planned new features supporting multiple `GEOSUPPORT_DISTFILE` file types. E.g., `.zip`, `.tgz`, `.deb`, `.rpm`, etc.
+> * New environment variable `GEOSUPPORT_DISTURI` for use with containers wishing to reference/download the Geosupport distribution file via URI/URL.
+> * New environment variable `REPODIR` added as path prefix to location where the Geosupport distribution file is copied into the container (`COPY GEOSUPPORT_DISTFILE REPODIR/GEOSUPPORT_DISTFILE`).
+> * Created new Docker env file `geosupport.env` which can be referenced from the commandline with `docker-compose` and `docker run`. See [Declare default environment variables in file](https://docs.docker.com/compose/env-file/)
+> * Added Docker label `version` to capture this project's version (as opposed to the Geosupport release/version).
+
 #### June 23rd, 2019
 * **Version 1.0.4 available.** This release wraps `Geosupport 19b_19.2`.
 
@@ -36,13 +48,13 @@ Geosupport is free to downloaded from the [Open Data -> Geocoding Application](h
 
 Remember to download the **Linux** distribution as the Windows flavors will not work for this project. Don't be surprised if the description refers to the "Geosupport Desktop Edition&trade;". As long as it's the Linux 64 bit distribution (currently named something like `linux_geo<release>_<version>.zip`), you are good to go.
 
-**IMPORTANT:** Save the downloaded zip file to the directory containing the Dockerfile for the image/container you are going to build/run. Pay attention to the file name because it may not match the default used when building the `-onbuild` image. In that case, use the `-e DISTFILE=<file>` argument when invoking `$ docker build ...`.
+**IMPORTANT:** Save the downloaded zip file to the directory containing the Dockerfile for the image/container you are going to build/run. Pay attention to the file name because it may not match the default used when building the `-onbuild` image. In that case, use the `-e GEOSUPPORT_DISTFILE=<file>` argument when invoking `$ docker build ...`.
 
 ## Dockerfile.onbuild
 
-Base `ONBUILD` image which defers the decompression and configuration of a Geosupport Linux distribution (`DISTFILE`) to the extending image.
+Base `ONBUILD` image which defers the decompression and configuration of a Geosupport Linux distribution (`GEOSUPPORT_DISTFILE`) to the extending image.
 
-This image now includes the `DISTFILE` containing the zipped Geosupport software and no longer needs to be in the same directory as that author's Dockerfile (build context).
+This image now includes the `GEOSUPPORT_DISTFILE` containing the zipped Geosupport software and no longer needs to be in the same directory as that author's Dockerfile (build context).
 
 This image intentionally does NOT declare a volume so that extending images can further modify the filesystem and/or decide whether or not to persist the `GEOSUPPORT_HOME` as a `VOLUME`.
 
@@ -59,7 +71,7 @@ Dockerfile which uses this as its base image:
     VOLUME ["$GEOSUPPORT_HOME"]
     ...
 
-Because Docker's `COPY` instruction is used to copy the specified `DISTFILE` into the container, it must be in or under the extending image's build context directory.
+Because Docker's `COPY` instruction is used to copy the specified `GEOSUPPORT_DISTFILE` into the container, it must be in or under the extending image's build context directory.
 
 See the comments in [Dockerfile.onbuild](https://github.com/mlipper/geosupport-docker/blob/master/Dockerfile.onbuild) for more details.
 
