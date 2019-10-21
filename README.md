@@ -12,17 +12,14 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 
 The latest news about this project.
 
-#### September 28th, 2019
+#### October 22nd, 2019
 * **Version 1.0.5 available.** This release wraps `Geosupport 19c_19.3`.
 
 **CHANGES:**
 
 > * Renamed environment variable `DISTFILE` to `GEOSUPPORT_DISTFILE`.
-> * New environment variable `GEOSUPPORT_DISTFILE_TYPE` to enable planned new features supporting multiple `GEOSUPPORT_DISTFILE` file types. E.g., `.zip`, `.tgz`, `.deb`, `.rpm`, etc.
-> * New environment variable `GEOSUPPORT_DISTURI` for use with containers wishing to reference/download the Geosupport distribution file via URI/URL.
-> * New environment variable `REPODIR` added as path prefix to location where the Geosupport distribution file is copied into the container (`COPY GEOSUPPORT_DISTFILE REPODIR/GEOSUPPORT_DISTFILE`).
-> * Created new Docker env file `geosupport.env` which can be referenced from the commandline with `docker-compose` and `docker run`. See [Declare default environment variables in file](https://docs.docker.com/compose/env-file/)
 > * Added Docker label `version` to capture this project's version (as opposed to the Geosupport release/version).
+> * Created new Docker env file `geosupport.env` which can be referenced from the commandline with `docker-compose` and `docker run`. See [Declare default environment variables in file](https://docs.docker.com/compose/env-file/)
 
 #### June 23rd, 2019
 * **Version 1.0.4 available.** This release wraps `Geosupport 19b_19.2`.
