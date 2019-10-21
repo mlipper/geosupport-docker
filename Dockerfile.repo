@@ -15,4 +15,4 @@ RUN set -ex \
     && echo "{\"date\":\"$(date -R)\",\"geosupportRelease\":\"$GEOSUPPORT_RELEASE\",\"geosupportVersion\":\"$GEOSUPPORT_VERSION\",\"geosupportDistfile\":\"$GEOSUPPORT_DISTFILE\",\"geosupportDownloadfile\":\"$downloadfile\"}" > "${DOWNLOAD_DIR}/version.json" \
     && ln -fs "${DOWNLOAD_DIR}/${GEOSUPPORT_DISTFILE}" "${DOWNLOAD_DIR}/${downloadfile}"
 
-EXPOSE 3600:80
+EXPOSE 80
