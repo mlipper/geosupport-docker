@@ -12,6 +12,13 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 
 The latest news about this project.
 
+#### December 6th, 2019
+* **Version 1.0.7 available**
+
+**CHANGES:**
+
+> * Upgrade base image from `debian:stretch` to `debian:buster-slim`
+
 #### December 5th, 2019
 * **Version 1.0.6 available.** This release wraps `Geosupport 19d_19.4`.
 
