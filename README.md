@@ -12,6 +12,9 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 
 The latest news about this project.
 
+#### February 26th, 2020
+* **Version 1.0.8 available.** This release wraps `Geosupport 20a_20.1`.
+
 #### December 6th, 2019
 * **Version 1.0.7 available**
 
@@ -87,4 +90,3 @@ See the comments in [Dockerfile.onbuild](https://github.com/mlipper/geosupport-d
 Dockerfile which can be used to run Geosupport interactively from the command line or to simplify the creation and population of Docker `VOLUME`s meant to be shared by multiple containers. This is often helpful in production environments; e.g., to upgrade Geosupport library and data files without stopping app containers using these volumes via Docker's logical reference functionality. Inspired by the ["data-packed volume container"](https://medium.com/on-docker/data-packed-volume-containers-distribute-configuration-c23ff80) as described by author Jeff Nickoloff in his book [Docker in Action](https://www.manning.com/books/docker-in-action).
 
 See the comments in [Dockerfile.onbuild](https://github.com/mlipper/geosupport-docker/blob/master/Dockerfile) for more details.
-

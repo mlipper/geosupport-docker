@@ -1,12 +1,12 @@
 #!/bin/bash
 
 
-gsrelease="19c"
-gsversion="19.3"
-pversion="1.0.5"
-newgsrelease="19.d"
-newgsversion="19.4"
-newpversion="1.0.6"
+gsrelease="19d"
+gsversion="19.4"
+pversion="1.0.7"
+newgsrelease="20a"
+newgsversion="20.1"
+newpversion="1.0.8"
 notgitdir="-not -path '*/\.git/*'"
 notdotsdir="-not -path '*/\.*'"
 notthisfile="-not -path '*/${BASH_SOURCE[0]}'"
@@ -55,4 +55,3 @@ EOF
 }
 
 usage
-
