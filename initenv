@@ -4,25 +4,26 @@ export GS_LIBRARY_PATH=$GEOSUPPORT_HOME/lib
 export PATH=$PATH:$GEOSUPPORT_HOME/bin
 
 echo "Geosupport environment:"
-echo GEOSUPPORT_HOME=$GEOSUPPORT_HOME
-echo GEOFILES=$GEOFILES
-echo GS_LIBRARY_PATH=$GS_LIBRARY_PATH
-
+echo "GEOSUPPORT_HOME=$GEOSUPPORT_HOME"
+echo "GEOFILES=$GEOFILES"
+echo "GS_LIBRARY_PATH=$GS_LIBRARY_PATH"
+echo
 echo "System runtime environment:"
-echo PATH=$PATH
-
+echo "PATH=$PATH"
 #
-# By default, Geosupport libs use the LD_LIBRARY_PATH environment variable.
-# If this script is called with an argument, ldconfig is used instead.
+# By default, Geosupport libs are visible to the dynamic linker by setting
+# the LD_LIBRARY_PATH environment variable.
 #
-use_ldconfig=$1
-
-if [ -n "$use_ldconfig" ]; then
+# If the environment contains a variable named GEOSUPPORT_LDCONFIG whose
+# value is not null or an empty string, ldconfig is used instead.
+# However, the call to ldconfig must be run as root.
+#
+if [ -n "$GEOSUPPORT_LDCONFIG" ]; then
   # Will fail if not run as root
   echo $GS_LIBRARY_PATH > /etc/ld.so.conf.d/geosupport.conf
   ldconfig
-  echo "$(ldconfig -p | grep -i geosupport)"
+  echo "$(ldconfig -p | grep -i libgeo.so)"
 else
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
-  echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+  echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 fi
