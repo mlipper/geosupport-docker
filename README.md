@@ -12,6 +12,9 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 
 The latest news about this project.
 
+#### May 16th, 2020
+* **Version 1.1.0 available.** This release wraps `Geosupport 20b_20.2`.
+
 #### March 2nd, 2020
 * **Version 1.0.9 available**
 
@@ -98,9 +101,9 @@ Because Docker's `COPY` instruction is used to copy the specified `GEOSUPPORT_DI
 **BUILD:**
 ```
 #
-# Example: build version 1.0.9
+# Example: build version 1.1.0
 #
-$ docker build -t mlipper/geosupport-docker:1.0.9-onbuild --build-arg GSD_VERSION=1.0.9 -f Dockerfile.onbuild .
+$ docker build -t mlipper/geosupport-docker:1.1.0-onbuild --build-arg GSD_VERSION=1.1.0 -f Dockerfile.onbuild .
 ```
 
 **BUILD ARGUMENTS:**
@@ -190,21 +193,21 @@ Dockerfile which can be used to run Geosupport interactively from the command li
 # Uses 'latest' for parent image by default
 $ docker build -t mlipper/geosupport-docker .
 
-# Uses '1.0.9' for parent image
-$ docker build --build-arg GSD_VERSION=1.0.9 -t mlipper/geosupport-docker:1.0.9 .
+# Uses '1.1.0' for parent image
+$ docker build --build-arg GSD_VERSION=1.1.0 -t mlipper/geosupport-docker:1.1.0 .
 ```
 
 **RUN:**
 
 ```
-# Run the Geosupport CLI (i.e. "goat") using version 1.0.9 of this image
-$ docker run -it --rm mlipper/geosupport-docker:1.0.9 goat
+# Run the Geosupport CLI (i.e. "goat") using version 1.1.0 of this image
+$ docker run -it --rm mlipper/geosupport-docker:1.1.0 goat
 
 # Create a "data volume container" to populate a shareable volume and exit
-$ docker run --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:1.0.9
+$ docker run --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:1.1.0
 
 # Same as above but use -it switches for interactive bash shell (from parent's default CMD)
-$ docker run -it --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:1.0.9
+$ docker run -it --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:1.1.0
 ```
 
 See [Dockerfile](./Dockerfile) for the source.
