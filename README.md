@@ -12,6 +12,14 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 
 The latest news about this project.
 
+#### August 27th, 2020
+* **Version 1.0.10 available.** This release wraps `Geosupport 20b_20.2`.
+
+  **CHANGES:**
+
+  > * Retroactive release of `Geosupport 20b_20.2`.
+  > * Retroactive update of `README.md` file to clarify release history.
+
 #### March 2nd, 2020
 * **Version 1.0.9 available**
 
@@ -21,8 +29,13 @@ The latest news about this project.
   > * Add support for detecting distribution file compressed using tar and gzip (`.tgz`).
   > * Remove `etc` directory.
   > * Remove Docker build argument options `ARG GEOSUPPORT_RELEASE` and `ARG GEOSUPPORT_VERSION`.
-  > * Add Docker build argument and environment variable `GEOSUPPORT_LDCONFIG`set to `true` by default.
+  > * Add Docker build argument and environment variable `GEOSUPPORT_LDCONFIG` set to `true` by default.
   > * Move long comments in Dockerfiles to `README.md`.
+
+  **NOTE**
+
+  > * _2020-08-27: added this section for clarity._
+  > * This release is the same as `1.0.8` except as noted by above. The diff is available [here](https://github.com/mlipper/geosupport-docker/commit/3269bf2e41d8301c25d2a6d7e73e79e8dc3ccdab)
 
 #### February 26th, 2020
 * **Version 1.0.8 available.** This release wraps `Geosupport 20a_20.1`.
@@ -98,9 +111,9 @@ Because Docker's `COPY` instruction is used to copy the specified `GEOSUPPORT_DI
 **BUILD:**
 ```
 #
-# Example: build version 1.0.9
+# Example: build version 1.0.10
 #
-$ docker build -t mlipper/geosupport-docker:1.0.9-onbuild --build-arg GSD_VERSION=1.0.9 -f Dockerfile.onbuild .
+$ docker build -t mlipper/geosupport-docker:1.0.10-onbuild --build-arg GSD_VERSION=1.0.10 -f Dockerfile.onbuild .
 ```
 
 **BUILD ARGUMENTS:**
@@ -190,21 +203,21 @@ Dockerfile which can be used to run Geosupport interactively from the command li
 # Uses 'latest' for parent image by default
 $ docker build -t mlipper/geosupport-docker .
 
-# Uses '1.0.9' for parent image
-$ docker build --build-arg GSD_VERSION=1.0.9 -t mlipper/geosupport-docker:1.0.9 .
+# Uses '1.0.10' for parent image
+$ docker build --build-arg GSD_VERSION=1.0.10 -t mlipper/geosupport-docker:1.0.10 .
 ```
 
 **RUN:**
 
 ```
-# Run the Geosupport CLI (i.e. "goat") using version 1.0.9 of this image
-$ docker run -it --rm mlipper/geosupport-docker:1.0.9 goat
+# Run the Geosupport CLI (i.e. "goat") using version 1.0.10 of this image
+$ docker run -it --rm mlipper/geosupport-docker:1.0.10 goat
 
 # Create a "data volume container" to populate a shareable volume and exit
-$ docker run --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:1.0.9
+$ docker run --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:1.0.10
 
 # Same as above but use -it switches for interactive bash shell (from parent's default CMD)
-$ docker run -it --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:1.0.9
+$ docker run -it --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:1.0.10
 ```
 
 See [Dockerfile](./Dockerfile) for the source.
