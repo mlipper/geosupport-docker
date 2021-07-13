@@ -4,11 +4,28 @@
 
 set -e
 
-# Use readlink from GNU coreutils to set current working directory
-if [[ "$(uname -s)" =~ Darwin* ]]; then
-  # Available from Homebrew: default install prepends a 'g' before adding
-  # it to the PATH.
+die() {
+    echo "$*" 1>&2
+    exit 1
+}
+
+#
+# Prefer readlink from GNU coreutils to set current working directory.
+#
+# NOTE to macos users:
+#
+#   On the macos, the BSD version of readlink is already installed
+#   and used by the operating system. Sadly, this script is not designed
+#   to work with the BSD version and this script will bail if the
+#   GNU readlink (greadlink) is not available.
+#
+#   The good new is that GNU readlink is available from Homebrew which
+#   install prepends a 'g' before adding it to the PATH.
+#
+if [[ -n "$(command -v greadlink)" ]]; then
   THIS_DIR="$(cd "$(dirname "$(greadlink -f "$BASH_SOURCE")")" && pwd)"
+elif [[ "$(uname -s)" =~ Darwin* ]]; then
+  die "[ERROR] GNU readlink (greadlink) not found."
 else
   THIS_DIR="$(cd "$(dirname "$(readlink -f "$BASH_SOURCE")")" && pwd)"
 fi
@@ -68,11 +85,6 @@ cat <<- EOF
 EOF
 }
 
-die() {
-    echo "$*" 1>&2
-    exit 1
-}
-
 log() {
     local category="INFO"
     local message=""
@@ -102,11 +114,11 @@ generate() {
 }
 
 repackage() {
-
+    log "REPACKAGE" "Repackaging DCP zip file."
 }
 
 run() {
-
+    log "RUN" "Begining regeneration process."
 }
 
 while [ $# -gt 0 ]; do
