@@ -1,6 +1,6 @@
-FROM @@base_image@@
+FROM @base_image@
 
-ENV GEOSUPPORT_BASEDIR=@@geosupport_basedir@@
+ENV GEOSUPPORT_BASEDIR=@geosupport_basedir@
 RUN mkdir -p "$GEOSUPPORT_BASEDIR"
 WORKDIR $GEOSUPPORT_BASEDIR
 
@@ -10,11 +10,11 @@ ENV GEOFILES="${GEOFILES:-${/opt/geosupport/current/fls/}}"
 ENV GS_LIBRARY_PATH="${GS_LIBRARY_PATH:-${/opt/geosupport/current/lib}}"
 ENV GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${/opt/geosupport/current/lib}}"
 
-ARG GEOSUPPORT_RELEASE=@@geosupport_release@@
-ARG GEOSUPPORT_MAJOR  =@@geosupport_major@@
-ARG GEOSUPPORT_MINOR  =@@geosupport_minor@@
-ARG GEOSUPPORT_PATCH  =@@geosupport_patch@@
+ARG GEOSUPPORT_RELEASE=@geosupport_release@
+ARG GEOSUPPORT_MAJOR=@geosupport_major@
+ARG GEOSUPPORT_MINOR=@geosupport_minor@
+ARG GEOSUPPORT_PATCH=@geosupport_patch@
 
-# version-@@geosupport_major@@@@geosupport_release@@@@geosupport_patch@@_@@geosupport_major@@.@@geosupport_minor@@
+# version-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@
 
 VOLUME "${GEOSUPPORT_BASEDIR}"
