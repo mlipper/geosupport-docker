@@ -4,6 +4,8 @@
 
 set -e
 
+printf "Using bash version: %s\n" $BASH_VERSION
+
 die() {
     echo "$*" 1>&2
     exit 1
@@ -32,7 +34,7 @@ fi
 
 THIS_FILE="$(basename "${BASH_SOURCE[0]}")"
 
-declare -A BUILD_ARGS
+#declare -A BUILD_ARGS
 
 BUILD_DIR="$THIS_DIR/build"
 GEO_H_PATCH_FILE="geo_h.patch"
@@ -41,6 +43,11 @@ GEOSUPPORT_MINOR="2"
 GEOSUPPORT_PATCH=
 GEOSUPPORT_RELEASE="b"
 GSD_VERSION="${GSD_VERSION:-latest}"
+
+# Get rid of these?
+COMPRESSION_FORMAT="tgz"
+GEOSUPPORT_BASEDIR="/opt/geosupport"
+GEOSUPPORT_DISTDIR="dist"
 
 usage() {
 cat <<- EOF
@@ -95,7 +102,8 @@ log() {
         category="$1"
         message="$2"
     fi
-    printf '%s [%s] %s\n' "$(date --rfc-3339=seconds)" "$1" "$2"
+    #printf '%s [%s] %s\n' "$(date --rfc-3339=seconds)" "$1" "$2"
+    printf '%s [%s] %s\n' "$(date "+%Y-%m-%d %H:%M:%S")" "$1" "$2"
 }
 
 clean() {
@@ -110,7 +118,24 @@ deploy() {
 
 generate() {
     log "GENERATE" "Generating Docker files for version ${GSD_VERSION}..."
-    log "GENERATE" "Generated  Docker files geosupport-deploy version ${GSD_VERSION}."
+    mkdir -p "${BUILD_DIR}"
+    cp -v Dockerfile.template "${BUILD_DIR}/Dockerfile"
+    foo="AAAAAA"
+    # NOTE: The sed in-place switch (-i) requires a file extension argument on macos and BSD
+    sed -i.tmp "s|@geosupport_basedir@|XXXX${foo}XXXX|g" "${BUILD_DIR}/Dockerfile"
+    sed -i.tmp "s|@GEOFILES@|${GEOFILES}|g" "${BUILD_DIR}/Dockerfile"
+    log "GENERATE" "One-----------------------"
+    exit 0
+    sed -i "s|@GS_LIBRARY_PATH@|${GS_LIBRARY_PATH}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_LDCONFIG@|${GEOSUPPORT_LDCONFIG}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@PATH@|${PATH}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEO_H_PATCH_FILE@|${GEO_H_PATCH_FILE}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_MAJOR@|${GEOSUPPORT_MAJOR}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_MINOR@|${GEOSUPPORT_MINOR}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_PATCH@|${GEOSUPPORT_PATCH}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_RELEASE@|${GEOSUPPORT_RELEASE}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GSD_VERSION@|${GSD_VERSION}|g" "${BUILD_DIR}/Dockerfile"
+    log "GENERATE" "Generated Docker files geosupport-deploy version ${GSD_VERSION}."
 }
 
 repackage() {
@@ -121,26 +146,57 @@ run() {
     log "RUN" "Begining regeneration process."
 }
 
+add_build_arg() {
+    local k="$1"
+    local v="$2"
+    #echo "Adding k: $k v: $v to BUILD_ARGS"
+    mkdir -p $BUILD_DIR
+    echo "$k $v" >> $BUILD_DIR/ba.txt
+    #printf 'BUILD_ARGS length=%s\n' "$((( ${#BUILD_ARGS[@]} > 0 )))"
+    #for key in "${!BUILD_ARGS[@]}"; do
+    #    echo -n "key: $key, "
+    #    echo "value: ${BUILD_ARGS[$key]}"
+    #done
+}
+
 while [ $# -gt 0 ]; do
 	# Necessary!
 	OPTIND=1
+    # See this page for the tricky details of using Bash associative arrays:
+    # https://www.shell-tips.com/bash/arrays/
     while getopts ":a:b:c:d:e:f:hi:lm:o:p:qr:su:v:" opt; do
         case "${opt}" in
         a)
             # echo "foo=bar" | while IFS= read -r barg; do echo "key: ${barg%%=*}, value: ${barg#*=}"; done
-            barg=${OPTARG}
-            echo "$barg" | \
-            while IFS= read -r arg; do
-                key=${arg%%=*}
-                echo "key=$key"
-                if [[ $arg =~ ,$ ]]; then
-                    value=""
-                else
-                    value=${arg#*=}
+            # https://unix.stackexchange.com/questions/146942/how-can-i-test-if-a-variable-is-empty-or-contains-only-spaces
+            #
+            if [[ ! -z "${OPTARG// }" ]]; then             # Make sure the value provided for -a is not null, the empty string, or only spaces
+                key="${OPTARG%%=*}"
+                value="${OPTARG#*=}"
+                if [[ ! -n "${build_args_string}" ]]; then # build_args_string variable is null or empty. initialize it without a leading space
+                    build_args_string="${key}=${value}"
+                else                                       # build_args_string variable has been initialized with a value so prepend a leading space
+                    build_args_string+="|${key}=${value}"
                 fi
-                echo "--build-arg ${key}=${value}"
-                BUILD_ARGS["${key}"]="${value}"
-            done
+                build_args_string="$(echo -n "$build_args_string" | sed -e 's/ *$//')" # Trim any trailing whitespace
+            fi
+
+            # barg=${OPTARG}
+            # echo "$barg" | while IFS= read -r arg; do
+            #     #key=${arg%%=*}
+            #     #echo "key=$key"
+            #     #if [[ $arg =~ ,$ ]]; then
+            #     #    value=""
+            #     #else
+            #     #    value=${arg#*=}
+            #     #fi
+            #     #echo "--build-arg ${key}=${value}"
+            #     if [[ $arg =~ ,$ ]]; then
+            #         add_build_arg ${arg%%=*} ""
+            #     else
+            #         add_build_arg ${arg%%=*} ${arg#*=}
+            #     fi
+            #done
             ;;
         b)
             geosupport_basedir=${OPTARG}
@@ -189,7 +245,8 @@ while [ $# -gt 0 ]; do
             geosupport_distfile_url=${OPTARG}
             ;;
         v)
-            gsd_version=${OPTARG}
+            log "GSD_VERSION=${GSD_VERSION}"
+            gsd_version=${OPTARG:-${GSD_VERSION}}
             ;;
         \?)
             echo "Invalid Option: -$OPTARG" 1>&2
@@ -202,6 +259,17 @@ while [ $# -gt 0 ]; do
         esac
     done
 
+    # -b <basedir>
+    geosupport_basedir=${geosupport_basedir:-${GEOSUPPORT_BASEDIR}}
+    # -c <compression_format>
+    compression_format=${compression_format:-${COMPRESSION_FORMAT}}
+    # -d <distdir>
+    geosupport_distdir=${geosupport_distdir:-${GEOSUPPORT_DISTDIR}}
+    # -e <envfile>
+    envfile=${envfile:-geosupport.env}
+    # -l (<download_from_dcp> is only set if this flag is given)
+    # -v <gsd_version>
+    gsd_version=${gsd_version:-${GSD_VERSION}}
 
 	# Remove already processed arguments
 	shift "$((OPTIND-1))"
@@ -232,12 +300,7 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-
-echo "              BUILD_ARGS"
-for i in "${!BUILD_ARGS[@]}"; do
-echo "                        ${i}=${BUILD_ARGS[$i]}"
-done
-
+echo "       build_args_string: ->${build_args_string}<-"
 echo "      compression_format=${compression_format}"
 echo "       download_from_dcp=${download_from_dcp}"
 echo "                 envfile=${envfile}"
@@ -254,7 +317,8 @@ echo "      local_bindmountdir=${local_bindmountdir}"
 echo "                   quiet=${quiet}"
 echo "            skip_headers=${skip_headers}"
 
-
+[[ -n "$doclean" ]] && clean
+[[ -n "$dogenerate" ]] && generate
 
 exit 0
 
