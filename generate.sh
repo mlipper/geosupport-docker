@@ -119,19 +119,23 @@ deploy() {
 generate() {
     log "GENERATE" "Generating Docker files for version ${GSD_VERSION}..."
     mkdir -p "${BUILD_DIR}"
-    cp -v Dockerfile.template "${BUILD_DIR}"
-    sed -i "s|@GEOSUPPORT_HOME@|${GEOSUPPORT_HOME}|g" "${BUILD_DIR}/Dockerfile.template"
-    sed -i "s|@GEOFILES@|${GEOFILES}|g" "${BUILD_DIR}/Dockerfile.template"
-    sed -i "s|@GS_LIBRARY_PATH@|${GS_LIBRARY_PATH}|g" "${BUILD_DIR}/Dockerfile.template"
-    sed -i "s|@GEOSUPPORT_LDCONFIG@|${GEOSUPPORT_LDCONFIG}|g" "${BUILD_DIR}/Dockerfile.template"
-    sed -i "s|@PATH@|${PATH}|g" "${BUILD_DIR}/Dockerfile.template"
-    sed -i "s|@GEO_H_PATCH_FILE@|${GEO_H_PATCH_FILE}"
-    sed -i "s|@GEOSUPPORT_MAJOR@|${GEOSUPPORT_MAJOR}"
-    sed -i "s|@GEOSUPPORT_MINOR@|${GEOSUPPORT_MINOR}"
-    sed -i "s|@GEOSUPPORT_PATCH@|${GEOSUPPORT_PATCH}"
-    sed -i "s|@GEOSUPPORT_RELEASE@|${GEOSUPPORT_RELEASE}"
-    sed -i "s|@GSD_VERSION@|${GSD_VERSION}"
-    log "GENERATE" "Generated  Docker files geosupport-deploy version ${GSD_VERSION}."
+    cp -v Dockerfile.template "${BUILD_DIR}/Dockerfile"
+    foo="AAAAAA"
+    # NOTE: The sed in-place switch (-i) requires a file extension argument on macos and BSD
+    sed -i.tmp "s|@geosupport_basedir@|XXXX${foo}XXXX|g" "${BUILD_DIR}/Dockerfile"
+    sed -i.tmp "s|@GEOFILES@|${GEOFILES}|g" "${BUILD_DIR}/Dockerfile"
+    log "GENERATE" "One-----------------------"
+    exit 0
+    sed -i "s|@GS_LIBRARY_PATH@|${GS_LIBRARY_PATH}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_LDCONFIG@|${GEOSUPPORT_LDCONFIG}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@PATH@|${PATH}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEO_H_PATCH_FILE@|${GEO_H_PATCH_FILE}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_MAJOR@|${GEOSUPPORT_MAJOR}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_MINOR@|${GEOSUPPORT_MINOR}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_PATCH@|${GEOSUPPORT_PATCH}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GEOSUPPORT_RELEASE@|${GEOSUPPORT_RELEASE}|g" "${BUILD_DIR}/Dockerfile"
+    sed -i "s|@GSD_VERSION@|${GSD_VERSION}|g" "${BUILD_DIR}/Dockerfile"
+    log "GENERATE" "Generated Docker files geosupport-deploy version ${GSD_VERSION}."
 }
 
 repackage() {
@@ -260,9 +264,10 @@ while [ $# -gt 0 ]; do
     # -c <compression_format>
     compression_format=${compression_format:-${COMPRESSION_FORMAT}}
     # -d <distdir>
-    geosupport_distdir=${geosupport_distdir:${GEOSUPPORT_DISTDIR}}
+    geosupport_distdir=${geosupport_distdir:-${GEOSUPPORT_DISTDIR}}
     # -e <envfile>
-    envfile=${envfile:-${ENVFILE}}
+    envfile=${envfile:-geosupport.env}
+    # -l (<download_from_dcp> is only set if this flag is given)
     # -v <gsd_version>
     gsd_version=${gsd_version:-${GSD_VERSION}}
 
@@ -312,7 +317,8 @@ echo "      local_bindmountdir=${local_bindmountdir}"
 echo "                   quiet=${quiet}"
 echo "            skip_headers=${skip_headers}"
 
-
+[[ -n "$doclean" ]] && clean
+[[ -n "$dogenerate" ]] && generate
 
 exit 0
 
