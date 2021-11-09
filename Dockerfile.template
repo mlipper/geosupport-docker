@@ -1,4 +1,4 @@
-FROM @base_image@
+FROM @gsd_baseimage@
 
 ENV GEOSUPPORT_BASEDIR=@geosupport_basedir@
 RUN mkdir -p "$GEOSUPPORT_BASEDIR"
@@ -17,4 +17,4 @@ ARG GEOSUPPORT_PATCH=@geosupport_patch@
 
 # version-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@
 
-VOLUME "${GEOSUPPORT_BASEDIR}"
+VOLUME "${GEOSUPPORT_BASEDIR}" 

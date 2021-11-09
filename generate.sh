@@ -116,7 +116,54 @@ deploy() {
     die "Warning: "deploy" action has not been implemented yet."
 }
 
+conf2sedf() {
+
+    [[ $# -eq 2 ]] || die "Function conf2sedf requires 2 arguments."
+    [[ -f "$1" ]] || die "File ${conf} does not exist."
+    local conf="$1"
+    local sedf="$2"
+    local key
+    local val
+    declare -A confmap
+
+    # Create an associative array where the keys are "@<propname>@" and values are the property
+    # values from the conf file.
+    while read -r line; do
+        if ! [[ "$line" =~ ^\# ]] && ! [[ "$line" =~ ^$ ]]; then # Skip comments, blank lines
+            key="${line%%=*}"
+            val="${line#*=}"
+            confmap["${key}"]="${val}"
+        fi
+    done < "${conf}"
+
+    local v
+    local pattern
+
+    # Using the associative array above, create a file with sed replacement commands.
+    for token in "${!confmap[@]}"; do
+        v="${confmap[${token}]}"
+        pattern="@${token}@"
+        echo "s|${pattern}|${v}|g" >> "${sedf}"
+    done
+}
+
 generate() {
+    log "GENERATE" "Generating Dockerfile from Dockerfile.template & release.conf files..."
+    mkdir -p "${BUILD_DIR}"
+    local sedf="${BUILD_DIR}/release.sed"
+    conf2sedf release.conf "$sedf"
+    sed -f "${sedf}" <Dockerfile.template >"${BUILD_DIR}/Dockerfile"
+    sed -f "${sedf}" <geosupport.env.template >"${BUILD_DIR}/geosupport.env"
+    # NOTE: The sed in-place switch (-i) requires a file extension argument on macos and BSD
+    #sed -i.tmp "s|@geosupport_basedir@|XXXX${foo}XXXX|g" "${BUILD_DIR}/Dockerfile"
+    log "GENERATE" "Dockerfile generation complete."
+
+    exit 0
+
+    sed "s|${pattern}|${v}|g" "${BUILD_DIR}/geosupport.env"
+    cp Dockerfile.template "${BUILD_DIR}/Dockerfile"
+    cp geosupport.env.template "${BUILD_DIR}/geosupport.env"
+
     log "GENERATE" "Generating Docker files for version ${GSD_VERSION}..."
     mkdir -p "${BUILD_DIR}"
     cp -v Dockerfile.template "${BUILD_DIR}/Dockerfile"
@@ -124,8 +171,6 @@ generate() {
     # NOTE: The sed in-place switch (-i) requires a file extension argument on macos and BSD
     sed -i.tmp "s|@geosupport_basedir@|XXXX${foo}XXXX|g" "${BUILD_DIR}/Dockerfile"
     sed -i.tmp "s|@GEOFILES@|${GEOFILES}|g" "${BUILD_DIR}/Dockerfile"
-    log "GENERATE" "One-----------------------"
-    exit 0
     sed -i "s|@GS_LIBRARY_PATH@|${GS_LIBRARY_PATH}|g" "${BUILD_DIR}/Dockerfile"
     sed -i "s|@GEOSUPPORT_LDCONFIG@|${GEOSUPPORT_LDCONFIG}|g" "${BUILD_DIR}/Dockerfile"
     sed -i "s|@PATH@|${PATH}|g" "${BUILD_DIR}/Dockerfile"
@@ -300,28 +345,29 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-echo "       build_args_string: ->${build_args_string}<-"
-echo "      compression_format=${compression_format}"
-echo "       download_from_dcp=${download_from_dcp}"
-echo "                 envfile=${envfile}"
-echo "      geosupport_basedir=${geosupport_basedir}"
-echo "      geosupport_distdir=${geosupport_distdir}"
-echo "     geosupport_distfile=${geosupport_distfile}"
-echo " geosupport_distfile_url=${geosupport_distfile_url}"
-echo "geosupport_major_version=${geosupport_major_version}"
-echo "geosupport_minor_version=${geosupport_minor_version}"
-echo "geosupport_patch_version=${geosupport_patch_version}"
-echo "      geosupport_release=${geosupport_release}"
-echo "             gsd_version=${gsd_version}"
-echo "      local_bindmountdir=${local_bindmountdir}"
-echo "                   quiet=${quiet}"
-echo "            skip_headers=${skip_headers}"
+#echo "       build_args_string: ->${build_args_string}<-"
+#echo "      compression_format=${compression_format}"
+#echo "       download_from_dcp=${download_from_dcp}"
+#echo "                 envfile=${envfile}"
+#echo "      geosupport_basedir=${geosupport_basedir}"
+#echo "      geosupport_distdir=${geosupport_distdir}"
+#echo "     geosupport_distfile=${geosupport_distfile}"
+#echo " geosupport_distfile_url=${geosupport_distfile_url}"
+#echo "geosupport_major_version=${geosupport_major_version}"
+#echo "geosupport_minor_version=${geosupport_minor_version}"
+#echo "geosupport_patch_version=${geosupport_patch_version}"
+#echo "      geosupport_release=${geosupport_release}"
+#echo "             gsd_version=${gsd_version}"
+#echo "      local_bindmountdir=${local_bindmountdir}"
+#echo "                   quiet=${quiet}"
+#echo "            skip_headers=${skip_headers}"
 
 [[ -n "$doclean" ]] && clean
 [[ -n "$dogenerate" ]] && generate
 
 exit 0
 
+# while read -r line; do l="${line}"; ! [[ "$l" =~ ^# ]] && echo "->${l}<-"; done < geosupport.env.template
 
 # Docker build arguments
 #DISTFILE="geosupport-server-${MAJOR}${RELEASE}_${MAJOR}.${MINOR}.tgz"
