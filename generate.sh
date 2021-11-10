@@ -34,15 +34,13 @@ fi
 
 THIS_FILE="$(basename "${BASH_SOURCE[0]}")"
 
-#declare -A BUILD_ARGS
-
 BUILD_DIR="$THIS_DIR/build"
-GEO_H_PATCH_FILE="geo_h.patch"
-GEOSUPPORT_MAJOR="21"
-GEOSUPPORT_MINOR="2"
-GEOSUPPORT_PATCH=
-GEOSUPPORT_RELEASE="b"
-GSD_VERSION="${GSD_VERSION:-latest}"
+#GEO_H_PATCH_FILE="geo_h.patch"
+#GEOSUPPORT_MAJOR="21"
+#GEOSUPPORT_MINOR="2"
+#GEOSUPPORT_PATCH=
+#GEOSUPPORT_RELEASE="b"
+#GSD_VERSION="${GSD_VERSION:-latest}"
 
 # Get rid of these?
 COMPRESSION_FORMAT="tgz"
@@ -61,7 +59,6 @@ cat <<- EOF
                     'tgz':  gzip'd tar file (default)
                     'zip':  zip file
       -d string     Local directory containing DCP Geosupport distro zip files (default "dist")
-      -e string     Environment file (default "release.env" if it exists)
       -f string     Name of Geosupport distro file (default "linux_geo<major><release><patch>_<major>_<minor>.zip")
       -h            Show this usage message and exit
       -i string     Geosupport minor version (required)
@@ -204,6 +201,8 @@ add_build_arg() {
     #done
 }
 
+[ $# -eq 0 ] && usage
+
 while [ $# -gt 0 ]; do
 	# Necessary!
 	OPTIND=1
@@ -338,10 +337,10 @@ while [ $# -gt 0 ]; do
         run)
             dorun=$1; shift
             ;;
-       # TODO Figure out why '*)' does not work and if we care.
-       #*)
-       #   echo "[WARNING] Invalid Command: "$1""; shift # Remove invalid command from the argument list
-       #     ;;
+        # TODO Figure out why '*)' does not work and if we care.
+        *)
+            log "WARNING" "Invalid command: $1"; shift
+            ;;
     esac
 done
 
