@@ -1,9 +1,6 @@
 FROM @gsd_baseimage@
 
 ENV GEOSUPPORT_BASEDIR=@geosupport_basedir@
-RUN mkdir -p "$GEOSUPPORT_BASEDIR"
-WORKDIR $GEOSUPPORT_BASEDIR
-
 ENV GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-/opt/geosupport}"
 ENV GEOSUPPORT_HOME="${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
 ENV GEOFILES="${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
@@ -16,5 +13,8 @@ ARG GEOSUPPORT_MINOR=@geosupport_minor@
 ARG GEOSUPPORT_PATCH=@geosupport_patch@
 
 # version-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@
+RUN mkdir -p "$GEOSUPPORT_BASEDIR"
+WORKDIR $GEOSUPPORT_BASEDIR
+
 
 VOLUME "${GEOSUPPORT_BASEDIR}" 
