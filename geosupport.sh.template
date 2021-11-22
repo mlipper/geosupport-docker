@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
+
+#
+# Globals
+#
+
+commands=()
+switches=()
+
+#
+# Environment
+#
+
+export GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-@geosupport_basedir@}"
+export GEOSUPPORT_HOME="${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
+export GEOFILES="${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
+export GS_LIBRARY_PATH="${GS_LIBRARY_PATH:-${GEOSUPPORT_HOME}/lib}"
+export GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
+
+#
+# Functions
+#
+
+die() {
+    echo "$*" 1>&2
+    exit 1
+}
+
+info() {
+cat <<- EOF
+
+# Version
+GEOSUPPORT_RELEASE=@geosupport_release@
+GEOSUPPORT_PATCH=@geosupport_patch@
+GEOSUPPORT_MAJOR=@geosupport_major@
+GEOSUPPORT_MINOR=@geosupport_minor@
+GEOSUPPORT_FULL_VERSION=@geosupport_fullversion@
+
+# Environment
+GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR}"
+   GEOSUPPORT_HOME="${GEOSUPPORT_HOME}"
+          GEOFILES="${GEOFILES}"
+   GS_LIBRARY_PATH="${GS_LIBRARY_PATH}"
+   GS_INCLUDE_PATH="${GS_INCLUDE_PATH}"
+
+
+EOF
+}
+
+#
+# By default, Geosupport libs are visible to the dynamic linker by setting
+# the LD_LIBRARY_PATH environment variable.
+#
+# If the environment contains a variable named GEOSUPPORT_LDCONFIG whose
+# value is not null or an empty string, ldconfig is used instead.
+# However, the call to ldconfig must be run as root.
+#
+install() {
+    local ldconfig=
+    local ldlibpath=
+    for s in ${switches}; do
+        case "${s}" in
+            ldconfig)
+                ldconfig="true"
+                ;;
+            ldlibpath)
+                ldlibpath="true"
+                ;;
+            *)
+                continue
+                ;;
+        esac
+    done
+    if [ -n "${ldconfig}" ]; then
+        # Will fail if not run as root
+        echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf
+        ldconfig
+        #echo "Result of \$GS_LIBRARY_PATH > /etc/ld.so.conf.d/geosupport.conf after calling ldconfig:"
+        #echo "$(ldconfig -p | grep -i ${GS_LIBRARY_PATH})"
+    fi
+
+    if [ -n "${ldlibpath}" ]; then
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
+        #echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+    fi
+
+    #mkdir -p ${GEOSUPPORT_BASEDIR} \
+    #    && cd ${GEOSUPPORT_BASEDIR} \
+    #    && tar xzvf ${GEOSUPPORT_DISTFILE} \
+    #    && ln -nfs ${GEOSUPPORT_BASEDIR}/${GEOSUPPORT_FULL_VERSION} ${GEOSUPPORT_HOME}
+}
+
+usage() {
+    local this_file
+    this_file="$(basename "${BASH_SOURCE[0]}")"
+cat <<- EOF
+
+Usage: ${this_file} [COMMAND [OPTIONS]]
+
+Run, install or show information about Geosupport
+
+Commands:
+  environment   Print Geosupport environment variable names and current values.
+
+  goat          Run a simple client for using Geosupport interactively from
+                the command line.
+
+  help          Show this usage message and exit.
+
+  install       Install Geosupport binaries, libraries and data.
+
+                Options:
+
+                  --ldconfig    Permanently adds GS_LIBRARY_PATH to the
+                                runtime shared library path.
+                                NOTE: Usually requires root privileges
+
+                  --ldlibpath   Adds GS_LIBRARY_PATH to the LD_LIBRARY_PATH
+                                variable.
+
+  version       Print Geosupport release and version information.
+
+EOF
+}
+
+main() {
+
+    [ $# -eq 0 ] && usage
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -e | environment)
+                commands+=( "environment" ); shift
+                ;;
+            -h | help)
+                commands+=( "help" ); shift
+                ;;
+            -i | install)
+                commands+=( "install" ); shift
+                ;;
+            -v | version)
+                commands+=( "version" ); shift
+                ;;
+            --*)
+                switches+=( "$1" ); shift
+                ;;
+            *)
+                die "Invalid argument: $1"; shift
+                ;;
+        esac
+    done
+
+    for cmd in "${commands[@]}"; do
+        case "${cmd}" in
+            environment)
+                usage ;;
+            help)
+                usage ;;
+            install)
+                echo "install" ;;
+            version)
+                info ;;
+            *)
+                die "Unknown command "${cmd}"" ;;
+        esac
+    done
+} # End main
+
+main "$@"

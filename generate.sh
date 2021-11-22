@@ -6,16 +6,14 @@ set -e
 # Globals
 #
 
-# Arguments from CLI
+# CLI non-option parameters
 declare -a actions
 
 # Hashtable of build properties-to-values
 declare -A confmap
 
 # Default property values
-BUILD_DIR=./build
-DIST_DIR=./dist
-GSD_VERSION="${GSD_VERSION:-latest}"
+BUILD_DIR=
 
 #
 # Functions
@@ -27,15 +25,13 @@ die() {
 }
 
 usage() {
-local this_file
-this_file="$(basename "${BASH_SOURCE[0]}")"
+    local this_file
+    this_file="$(basename "${BASH_SOURCE[0]}")"
 cat <<- EOF
 
     Usage: ${this_file} [OPTIONS] [ACTIONS]
 
     Options:
-      -f string     Geosupport distro file name
-                    (default "linux_geo<major><release><patch>_<major>_<minor>.zip")
       -h            Show this usage message and exit
       -p string     Build property name and optional value.
 
@@ -53,16 +49,18 @@ cat <<- EOF
                     The '-p' option may be specified multiple times on a commandline.
 
     Actions:
-      clean         Remove the local build directory
-                    If given, always first action to execute.
+      clean         Remove the local build directory.
 
-      generate      Generate project source using *.template files.
+      generate      Generate project source using *.template files release.conf.
 
       show          Print build properties and their values, sorted, to stdout. 
 
 EOF
 }
 
+#
+# Print log messages to stdout.
+#
 log() {
     local category="INFO"
     local message=""
@@ -76,34 +74,35 @@ log() {
     printf '%s [%s] %s\n' "$(date "+%Y-%m-%d %H:%M:%S")" "${category}" "${message}"
 }
 
+#
+# Deletes the build directory.
+#
 clean() {
     log "CLEAN" "Removing build directory ${BUILD_DIR}..."
     rm -rf "${BUILD_DIR}" || die "Error: could not remove build directory ${BUILD_DIR}."
     log "CLEAN" "Build directory ${BUILD_DIR} removed."
 }
 
+#
+# Create an associative array using the keys and values from the file
+# argument passed to this function.
+#
 initialize_confmap() {
-    # Create an associative array where the keys are "@<propname>@" and values are the property
-    # values from the conf file.
-    #
     [[ -f "$1" ]] || die "File $1 does not exist."
     local conf="$1"
     local key
     local val
-    # Note: The test of the line var insures last line is read even if
-    #       there's no trailing newline.
-    while IFS= read -r line || [ -n "$line" ]; do
-        if ! [[ "$line" =~ ^\# ]] && ! [[ "$line" =~ ^$ ]]; then # Skip comments, blank lines
+    while IFS= read -r line || [ -n "$line" ]; do # non-empty test insures last
+                                                  # line is read even without a
+                                                  # trailing newline.
+        if ! [[ "$line" =~ ^\# ]] \
+          && ! [[ "$line" =~ ^$ ]]; then # Skip comments, blank lines
             key="${line%%=*}"
             val="${line#*=}"
             confmap["${key}"]="${val}"
-            #echo "value: ${val}"
+            #log "DEBUG" "${key}: ${val}"
         fi
     done < "${conf}"
-
-    #DISTFILE="geosupport-server-${MAJOR}${RELEASE}_${MAJOR}.${MINOR}.tgz"
-    #DISTFILE="linux_geo${MAJOR}${RELEASE}_${MAJOR}_${MINOR}.zip"
-
 }
 
 #
@@ -119,11 +118,9 @@ initialize_confmap() {
 #
 conf2sedf() {
     [[ -z "$1" ]] && die "Function onf2sedf requires the path to the generated sed file as an argument."
-
     local v
     local pattern
     local sedf="$1"
-
     for token in "${!confmap[@]}"; do
         v="${confmap[${token}]}"
         pattern="@${token}@"
@@ -131,23 +128,74 @@ conf2sedf() {
     done
 }
 
+#
+# Initializes any derived properties which have not been set from the
+# configuration file or script parameters but are required.
+#
+# NOTE: Global variables (e.g., BUILD_DIR) are _not_ available yet
+#       when this function gets called.
+#
+derive_unset_properties() {
+    local version_prefix="${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}"
+    if [[ ! -n "${confmap[geosupport_fullversion]}" ]]; then
+        # Uses '.' to separate major and minor version (unlike 'gsd_dcp_distfile' below)
+        confmap["geosupport_fullversion"]="${version_prefix}.${confmap[geosupport_minor]}"
+    fi
+    if [[ ! -n "${confmap[gsd_dcp_distfile]}" ]]; then
+        # Uses '_' to separate major and minor version (unlike 'geosupport_fullversion' above)
+        confmap["gsd_dcp_distfile"]="linux_geo${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}_${confmap[geosupport_minor]}.zip"
+    fi
+}
+
+_beforebuild() {
+    # Create the build directory
+    mkdir -p "${BUILD_DIR}"
+}
+
 generate() {
     log "GENERATE" "Generating templated Docker files..."
+    _beforebuild
+    local gsd_script_template="${confmap[gsd_script_template]}"
     local sedf="${BUILD_DIR}/release.sed"
-    conf2sedf "$sedf"
+    # Generate sedfile and invoke sed
+    conf2sedf "${sedf}"
     sed -f "${sedf}" <Dockerfile.template >"${BUILD_DIR}/Dockerfile"
     sed -f "${sedf}" <geosupport.env.template >"${BUILD_DIR}/geosupport.env"
+    sed -f "${sedf}" <"${gsd_script_template}" >"${BUILD_DIR}/geosupport.sh"
+    rm "${sedf}"
+    # FIXME
+    build "gsd"
     log "GENERATE" "Generation of templated Docker files complete."
+}
+
+build() {
+    log "BUILD" "Building Docker image..."
+    _beforebuild
+    cp geo_h.patch "${BUILD_DIR}"
+    cp "${confmap[gsd_distdir]}/${confmap[gsd_dcp_distfile]}" "${BUILD_DIR}"
+    # FIXME
+    currd="$(pwd)"
+    cd "${BUILD_DIR}"
+    docker build -t "$1"  .
+    cd "${currd}"
+    log "BUILD" "Docker image built."
 }
 
 show() {
     declare -a keys
-    printf '\n%-30s %-40s\n' 'Property' 'Value'
-    printf '%-30s %-40s\n' '------------------------------' '----------------------------------------'
+    printf '\n'
+    printf ' %-30s %-40s\n' 'Property' 'Value'
+    printf ' %-30s %-40s\n' '------------------------------' '----------------------------------------'
     keys=$(echo ${!confmap[@]} | tr ' ' '\012' | sort | tr '\012' ' ')
     for property in ${keys}; do
         value="${confmap[${property}]}"
-        printf '%-30s %-40s\n' "${property}" "${value}"
+        printf ' %-30s %-40s\n' "${property}" "${value}"
+    done
+    printf '\n'
+    printf ' %-30s\n' 'Actions'
+    printf ' %-30s\n' '------------------------------'
+    for a in "${actions[@]}"; do
+        printf ' %-30s\n' "${a}"
     done
     printf '\n'
 }
@@ -161,18 +209,11 @@ main() {
     # also exist in the file.
     initialize_confmap release.conf
 
-    # Create the build directory so that actions like generate can
-    # assume it exists.
-    mkdir -p "${BUILD_DIR}"
-
     while [ $# -gt 0 ]; do
         # Necessary!
         OPTIND=1
-        while getopts "f:hp:" opt; do
+        while getopts "hp:" opt; do
             case "${opt}" in
-            f)
-                confmap["local_geosupport_distfile"]="${OPTARG}"
-                ;;
             h)
                 usage
                 exit 0
@@ -217,6 +258,11 @@ main() {
                 ;;
         esac
     done
+
+    # Default optional properties not given at the commandline
+    derive_unset_properties
+
+    BUILD_DIR="${confmap[gsd_builddir]}"
 
     for action in "${actions[@]}"; do
         case "${action}" in
