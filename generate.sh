@@ -133,11 +133,24 @@ conf2sedf() {
 
 generate() {
     log "GENERATE" "Generating templated Docker files..."
+    # Create the build directory
+    mkdir -p "${BUILD_DIR}"
+    cp geo_h.patch "${BUILD_DIR}"
     local sedf="${BUILD_DIR}/release.sed"
     conf2sedf "$sedf"
+    log "GENERATE" "Contents of ${sedf}:"
+    log "GENERATE" "$(cat ${sedf})"
     sed -f "${sedf}" <Dockerfile.template >"${BUILD_DIR}/Dockerfile"
     sed -f "${sedf}" <geosupport.env.template >"${BUILD_DIR}/geosupport.env"
+    local gsd_dcp_distfile="${confmap[gsd_dcp_distdir]}/linux_geo${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}_${confmap[geosupport_minor]}.zip"
+    cp ${gsd_dcp_distfile} "${BUILD_DIR}"
+    rm "${sedf}"
     log "GENERATE" "Generation of templated Docker files complete."
+}
+
+build() {
+    log "BUILD" "Building Docker image..."
+    log "BUILD" "Docker image built."
 }
 
 show() {
@@ -160,10 +173,6 @@ main() {
     # from the commandline will have precedence over those that
     # also exist in the file.
     initialize_confmap release.conf
-
-    # Create the build directory so that actions like generate can
-    # assume it exists.
-    mkdir -p "${BUILD_DIR}"
 
     while [ $# -gt 0 ]; do
         # Necessary!
