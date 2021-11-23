@@ -15,7 +15,6 @@ declare -A confmap
 # Default property values
 BUILD_DIR=./build
 DIST_DIR=./dist
-GSD_VERSION="${GSD_VERSION:-latest}"
 
 #
 # Functions
@@ -63,6 +62,9 @@ cat <<- EOF
 EOF
 }
 
+#
+# Print log messages to stdout.
+#
 log() {
     local category="INFO"
     local message=""
@@ -76,34 +78,35 @@ log() {
     printf '%s [%s] %s\n' "$(date "+%Y-%m-%d %H:%M:%S")" "${category}" "${message}"
 }
 
+#
+# Deletes the build directory.
+#
 clean() {
     log "CLEAN" "Removing build directory ${BUILD_DIR}..."
     rm -rf "${BUILD_DIR}" || die "Error: could not remove build directory ${BUILD_DIR}."
     log "CLEAN" "Build directory ${BUILD_DIR} removed."
 }
 
+#
+# Create an associative array using the keys and values from the file
+# argument passed to this function.
+#
 initialize_confmap() {
-    # Create an associative array where the keys are "@<propname>@" and values are the property
-    # values from the conf file.
-    #
     [[ -f "$1" ]] || die "File $1 does not exist."
     local conf="$1"
     local key
     local val
-    # Note: The test of the line var insures last line is read even if
-    #       there's no trailing newline.
-    while IFS= read -r line || [ -n "$line" ]; do
-        if ! [[ "$line" =~ ^\# ]] && ! [[ "$line" =~ ^$ ]]; then # Skip comments, blank lines
+    while IFS= read -r line || [ -n "$line" ]; do # non-empty test insures last
+                                                  # line is read even without a
+                                                  # trailing newline.
+        if ! [[ "$line" =~ ^\# ]] \
+          && ! [[ "$line" =~ ^$ ]]; then # Skip comments, blank lines
             key="${line%%=*}"
             val="${line#*=}"
             confmap["${key}"]="${val}"
-            #echo "value: ${val}"
+            log "DEBUG" "${key}: ${val}"
         fi
     done < "${conf}"
-
-    #DISTFILE="geosupport-server-${MAJOR}${RELEASE}_${MAJOR}.${MINOR}.tgz"
-    #DISTFILE="linux_geo${MAJOR}${RELEASE}_${MAJOR}_${MINOR}.zip"
-
 }
 
 #
@@ -119,16 +122,31 @@ initialize_confmap() {
 #
 conf2sedf() {
     [[ -z "$1" ]] && die "Function onf2sedf requires the path to the generated sed file as an argument."
-
     local v
     local pattern
     local sedf="$1"
-
     for token in "${!confmap[@]}"; do
         v="${confmap[${token}]}"
         pattern="@${token}@"
         echo "s|${pattern}|${v}|g" >> "${sedf}"
     done
+}
+
+#
+# Initializes any required properties which have not been set from the
+# configuration file or script parameters.
+#
+initialize_missing_properties() {
+    local geosupport_fullversion
+    local gsd_dcp_distfile
+    if [[ ! -n "${confmap[geosupport_fullversion]}" ]]; then
+        geosupport_fullversion="${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}_${confmap[geosupport_minor]}"
+        confmap["geosupport_fullversion"]=geosupport_fullversion
+    fi
+    if [[ ! -n "${confmap[gsd_dcp_distfile]}" ]]; then
+        gsd_dcp_distfile="${confmap[gsd_dcp_distdir]}/linux_geo${geosupport_fullversion}.zip"
+        confmap["gsd_dcp_distfile"]=gsd_dcp_distfile
+    fi
 }
 
 generate() {
@@ -179,8 +197,14 @@ main() {
         OPTIND=1
         while getopts "f:hp:" opt; do
             case "${opt}" in
+            b)
+                confmap["arg_builddir"]="${OPTARG}"
+                ;;
             f)
-                confmap["local_geosupport_distfile"]="${OPTARG}"
+                confmap["arg_distfile"]="${OPTARG}"
+                ;;
+            f)
+                confmap["arg_distfile"]="${OPTARG}"
                 ;;
             h)
                 usage
