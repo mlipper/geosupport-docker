@@ -13,8 +13,7 @@ ENV GEOSUPPORT_MAJOR @geosupport_major@
 ENV GEOSUPPORT_MINOR @geosupport_minor@
 # Must use "=" because it is usually unset
 ENV GEOSUPPORT_PATCH=@geosupport_patch@
-
-ENV GEOSUPPORT_FULL_VERSION "${GEOSUPPORT_MAJOR}${GEOSUPPORT_RELEASE}${GEOSUPPORT_PATCH}_${GEOSUPPORT_MAJOR}.${GEOSUPPORT_MINOR}"
+ENV GEOSUPPORT_FULL_VERSION @geosupport_fullversion@
 
 RUN set -ex; \
     apt-get update; \
@@ -24,8 +23,7 @@ RUN set -ex; \
     ; \
     rm -rf /var/lib/apt/lists/*;
 
-COPY "linux_geo${GEOSUPPORT_MAJOR}${GEOSUPPORT_RELEASE}${GEOSUPPORT_PATCH}_${GEOSUPPORT_MAJOR}_${GEOSUPPORT_MINOR}.zip" \
-        /geosupport.zip
+COPY @gsd_dcp_distfile@ /geosupport.zip
 
 COPY geo_h.patch /geo_h.patch
 
