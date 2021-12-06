@@ -1,18 +1,8 @@
+# syntax=docker/dockerfile:1
+
 ARG VARIANT=@gsd_baseimage@
 FROM ${VARIANT}
 
-ENV GEOSUPPORT_BASEDIR @geosupport_basedir@
-ENV GEOSUPPORT_BASEDIR "${GEOSUPPORT_BASEDIR:-/opt/geosupport}"
-ENV GEOSUPPORT_HOME "${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
-ENV GEOFILES "${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
-ENV GS_LIBRARY_PATH "${GS_LIBRARY_PATH:-${GEOSUPPORT_HOME}/lib}"
-ENV GS_INCLUDE_PATH "${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
-
-ENV GEOSUPPORT_RELEASE @geosupport_release@
-ENV GEOSUPPORT_MAJOR @geosupport_major@
-ENV GEOSUPPORT_MINOR @geosupport_minor@
-# Must use "=" because it is usually unset
-ENV GEOSUPPORT_PATCH=@geosupport_patch@
 ENV GEOSUPPORT_FULL_VERSION @geosupport_fullversion@
 
 RUN set -ex; \
@@ -24,28 +14,25 @@ RUN set -ex; \
     rm -rf /var/lib/apt/lists/*;
 
 COPY @gsd_dcp_distfile@ /geosupport.zip
-
 COPY geo_h.patch /geo_h.patch
+COPY geosupport.sh /geosupport.sh
 
 RUN set -eux; \
-    echo "Extracting zip file /geosupport.zip to /repackage directory." && \
-    mkdir -p "/repackage/version-${GEOSUPPORT_FULL_VERSION}" && \
-    cd /repackage && \
+    echo "Extracting zip file /geosupport.zip to /@gsd_distdir@ directory." && \
+    mkdir -p "/@gsd_distdir@/version-${GEOSUPPORT_FULL_VERSION}" && \
+    cd /@gsd_distdir@ && \
     unzip -qj /geosupport.zip "**/bin/c_client" -d "version-${GEOSUPPORT_FULL_VERSION}/bin" && \
     unzip -qj /geosupport.zip "**/fls/*" -d "version-${GEOSUPPORT_FULL_VERSION}/fls" && \
     unzip -qj /geosupport.zip "**/include/foruser/*" -d "version-${GEOSUPPORT_FULL_VERSION}/include" && \
     unzip -qj /geosupport.zip "**/lib/*" -d "version-${GEOSUPPORT_FULL_VERSION}/lib" && \
     mv "version-${GEOSUPPORT_FULL_VERSION}/bin/c_client" "version-${GEOSUPPORT_FULL_VERSION}/bin/goat" && \
+    chmod +x /install.sh && \
+    mv /geosupport.sh "version-${GEOSUPPORT_FULL_VERSION}/bin/geosupport.sh" && \
     mv "version-${GEOSUPPORT_FULL_VERSION}/include/geo.h" "version-${GEOSUPPORT_FULL_VERSION}/include/geo.h.orig" && \
     patch -i /geo_h.patch -o "version-${GEOSUPPORT_FULL_VERSION}/include/geo.h" "version-${GEOSUPPORT_FULL_VERSION}/include/geo.h.orig" && \
-    #mv /initenv "${GEOSUPPORT_HOME}/bin/initenv" && \
     tar czvf "geosupport-${GEOSUPPORT_FULL_VERSION}.tgz" "version-${GEOSUPPORT_FULL_VERSION}" && \
     rm -rf "version-${GEOSUPPORT_FULL_VERSION}" && \
     rm /geosupport.zip && \
     rm /geo_h.patch
-#RUN mkdir -p ${GEOSUPPORT_BASEDIR} \
-#    && cd ${GEOSUPPORT_BASEDIR} \
-#    && tar xzvf ${GEOSUPPORT_DISTFILE} \
-#    && ln -nfs ${GEOSUPPORT_BASEDIR}/${GEOSUPPORT_FULL_VERSION} ${GEOSUPPORT_HOME}
-#
-VOLUME /repackage
+
+VOLUME /@gsd_distdir@

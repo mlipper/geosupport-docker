@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+set -ex
+
+# Environment
+export GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-@geosupport_basedir@}"
+export GEOSUPPORT_HOME="${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
+export GEOFILES="${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
+export GS_LIBRARY_PATH="${GS_LIBRARY_PATH:-${GEOSUPPORT_HOME}/lib}"
+export GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
+
+# Release info
+GEOSUPPORT_RELEASE=@geosupport_release@
+GEOSUPPORT_PATCH=@geosupport_patch@
+GEOSUPPORT_MAJOR=@geosupport_major@
+GEOSUPPORT_MINOR=@geosupport_minor@
+GEOSUPPORT_FULL_VERSION=@geosupport_fullversion@
+
+#GEOSUPPORT_LDCONFIG=@install_ldd@
+
+#echo
+#echo "GEOSUPPORT_HOME=$GEOSUPPORT_HOME"
+#echo "GEOFILES=$GEOFILES"
+#echo "GS_LIBRARY_PATH=$GS_LIBRARY_PATH"
+#echo "GEOSUPPORT_LDCONFIG=${GEOSUPPORT_LDCONFIG:-<unset>}"
+#echo "PATH=$PATH"
+
+##
+## By default, Geosupport libs are visible to the dynamic linker by setting
+## the LD_LIBRARY_PATH environment variable.
+##
+## If the environment contains a variable named GEOSUPPORT_LDCONFIG whose
+## value is not null or an empty string, ldconfig is used instead.
+## However, the call to ldconfig must be run as root.
+##
+#if [ -n "$GEOSUPPORT_LDCONFIG" ]; then
+#  # Will fail if not run as root
+#  echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf
+#  ldconfig
+#  echo "Result of \$GS_LIBRARY_PATH > /etc/ld.so.conf.d/geosupport.conf after calling ldconfig:"
+#  echo "$(ldconfig -p | grep -i ${GS_LIBRARY_PATH})"
+#else
+#  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
+#  echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+#fi
+#echo
+
+#RUN mkdir -p ${GEOSUPPORT_BASEDIR} \
+#    && cd ${GEOSUPPORT_BASEDIR} \
+#    && tar xzvf ${GEOSUPPORT_DISTFILE} \
+#    && ln -nfs ${GEOSUPPORT_BASEDIR}/${GEOSUPPORT_FULL_VERSION} ${GEOSUPPORT_HOME}
+#

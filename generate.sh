@@ -14,6 +14,7 @@ declare -A confmap
 
 # Default property values
 BUILD_DIR=
+DIST_DIR=
 
 #
 # Functions
@@ -129,8 +130,11 @@ conf2sedf() {
 }
 
 #
-# Initializes any required properties which have not been set from the
-# configuration file or script parameters.
+# Initializes any derived properties which have not been set from the
+# configuration file or script parameters but are required.
+#
+# NOTE: Global variables BUILD_DIR and DIST_DIR are _not_ available yet
+# .     when this function gets called.
 #
 derive_unset_properties() {
     local geosupport_fullversion
@@ -140,23 +144,25 @@ derive_unset_properties() {
         confmap["geosupport_fullversion"]="${geosupport_fullversion}"
     fi
     if [[ ! -n "${confmap[gsd_dcp_distfile]}" ]]; then
-        gsd_dcp_distfile="${confmap[gsd_dcp_distdir]}/linux_geo${geosupport_fullversion}.zip"
+        gsd_dcp_distfile="linux_geo${geosupport_fullversion}.zip"
         confmap["gsd_dcp_distfile"]="${gsd_dcp_distfile}"
     fi
 }
 
 generate() {
     log "GENERATE" "Generating templated Docker files..."
+
+    local gsd_script_template="${confmap[gsd_script_template]}"
+    local sedf="${BUILD_DIR}/release.sed"
+
     # Create the build directory
     mkdir -p "${BUILD_DIR}"
     cp geo_h.patch "${BUILD_DIR}"
-    local sedf="${BUILD_DIR}/release.sed"
     conf2sedf "$sedf"
-    #log "GENERATE" "Contents of ${sedf}:"
-    #log "GENERATE" "$(cat ${sedf})"
     sed -f "${sedf}" <Dockerfile.template >"${BUILD_DIR}/Dockerfile"
     sed -f "${sedf}" <geosupport.env.template >"${BUILD_DIR}/geosupport.env"
-    cp "${confmap[gsd_dcp_distfile]}" "${BUILD_DIR}"
+    sed -f "${sedf}" <"${gsd_script_template}" >"${BUILD_DIR}/geosupport.sh"
+    cp "${DIST_DIR}/${confmap[gsd_dcp_distfile]}" "${BUILD_DIR}"
     rm "${sedf}"
     log "GENERATE" "Generation of templated Docker files complete."
 }
@@ -248,6 +254,7 @@ main() {
     derive_unset_properties
 
     BUILD_DIR="${confmap[gsd_builddir]}"
+    DIST_DIR="${confmap[gsd_distdir]}"
 
     for action in "${actions[@]}"; do
         case "${action}" in
