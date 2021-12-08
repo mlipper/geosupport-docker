@@ -14,7 +14,6 @@ declare -A confmap
 
 # Default property values
 BUILD_DIR=
-DIST_DIR=
 
 #
 # Functions
@@ -133,42 +132,52 @@ conf2sedf() {
 # Initializes any derived properties which have not been set from the
 # configuration file or script parameters but are required.
 #
-# NOTE: Global variables BUILD_DIR and DIST_DIR are _not_ available yet
-# .     when this function gets called.
+# NOTE: Global variables (e.g., BUILD_DIR) are _not_ available yet
+#       when this function gets called.
 #
 derive_unset_properties() {
-    local geosupport_fullversion
-    local gsd_dcp_distfile
+    local version_prefix="${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}"
     if [[ ! -n "${confmap[geosupport_fullversion]}" ]]; then
-        geosupport_fullversion="${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}_${confmap[geosupport_minor]}"
-        confmap["geosupport_fullversion"]="${geosupport_fullversion}"
+        # Uses '.' to separate major and minor version (unlike 'gsd_dcp_distfile' below)
+        confmap["geosupport_fullversion"]="${version_prefix}.${confmap[geosupport_minor]}"
     fi
     if [[ ! -n "${confmap[gsd_dcp_distfile]}" ]]; then
-        gsd_dcp_distfile="linux_geo${geosupport_fullversion}.zip"
-        confmap["gsd_dcp_distfile"]="${gsd_dcp_distfile}"
+        # Uses '_' to separate major and minor version (unlike 'geosupport_fullversion' above)
+        confmap["gsd_dcp_distfile"]="linux_geo${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}_${confmap[geosupport_minor]}.zip"
     fi
+}
+
+_beforebuild() {
+    # Create the build directory
+    mkdir -p "${BUILD_DIR}"
 }
 
 generate() {
     log "GENERATE" "Generating templated Docker files..."
-
+    _beforebuild
     local gsd_script_template="${confmap[gsd_script_template]}"
     local sedf="${BUILD_DIR}/release.sed"
-
-    # Create the build directory
-    mkdir -p "${BUILD_DIR}"
-    cp geo_h.patch "${BUILD_DIR}"
-    conf2sedf "$sedf"
+    # Generate sedfile and invoke sed
+    conf2sedf "${sedf}"
     sed -f "${sedf}" <Dockerfile.template >"${BUILD_DIR}/Dockerfile"
     sed -f "${sedf}" <geosupport.env.template >"${BUILD_DIR}/geosupport.env"
     sed -f "${sedf}" <"${gsd_script_template}" >"${BUILD_DIR}/geosupport.sh"
-    cp "${DIST_DIR}/${confmap[gsd_dcp_distfile]}" "${BUILD_DIR}"
     rm "${sedf}"
+    # FIXME
+    build "gsd"
     log "GENERATE" "Generation of templated Docker files complete."
 }
 
 build() {
     log "BUILD" "Building Docker image..."
+    _beforebuild
+    cp geo_h.patch "${BUILD_DIR}"
+    cp "${confmap[gsd_distdir]}/${confmap[gsd_dcp_distfile]}" "${BUILD_DIR}"
+    # FIXME
+    currd="$(pwd)"
+    cd "${BUILD_DIR}"
+    docker build -t "$1"  .
+    cd "${currd}"
     log "BUILD" "Docker image built."
 }
 
@@ -254,7 +263,6 @@ main() {
     derive_unset_properties
 
     BUILD_DIR="${confmap[gsd_builddir]}"
-    DIST_DIR="${confmap[gsd_distdir]}"
 
     for action in "${actions[@]}"; do
         case "${action}" in
