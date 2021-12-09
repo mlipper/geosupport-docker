@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -Eeuo pipefail
 
 #
 # Globals
@@ -147,38 +147,49 @@ derive_unset_properties() {
     fi
 }
 
-_beforebuild() {
+_prepare_build_dir() {
     # Create the build directory
     mkdir -p "${BUILD_DIR}"
+    # Copy non-templated files to build directory
+    cp geo_h.patch "${BUILD_DIR}"
+    cp "${confmap[gsd_distdir]}/${confmap[gsd_dcp_distfile]}" "${BUILD_DIR}"
+}
+
+_gen_build_script() {
+    local scriptf="${BUILD_DIR}/build-image.sh"
+    cat <<- EOF > "${scriptf}"
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+if [[ ! $(uname) =~ Darwin ]]; then
+    cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
+else
+    # Darwin most likely
+    cd "\$(dirname "\$(greadlink -f "\$BASH_SOURCE")")"
+fi
+
+echo \$(pwd)
+echo docker build -t "geosupport_docker:${confmap[gsd_version]}"  .
+
+EOF
+    chmod +x "${scriptf}"
 }
 
 generate() {
-    log "GENERATE" "Generating templated Docker files..."
-    _beforebuild
-    local gsd_script_template="${confmap[gsd_script_template]}"
+    log "GENERATE" "Generating source files from templates..."
+    _prepare_build_dir
     local sedf="${BUILD_DIR}/release.sed"
-    # Generate sedfile and invoke sed
+    # Generate sedfile from key-value pairs in release.conf
     conf2sedf "${sedf}"
-    sed -f "${sedf}" <Dockerfile.template >"${BUILD_DIR}/Dockerfile"
-    sed -f "${sedf}" <geosupport.env.template >"${BUILD_DIR}/geosupport.env"
-    sed -f "${sedf}" <"${gsd_script_template}" >"${BUILD_DIR}/geosupport.sh"
+    # Run sed against all *.template files to replace token strings (@<string>@)
+    # with configuration values using the patterns in the generated sedfile
+    for tplf in $(ls *.template); do
+        sed -f "${sedf}" <"${tplf}" >"${BUILD_DIR}/${tplf%%.template}"
+    done
     rm "${sedf}"
-    # FIXME
-    build "gsd"
-    log "GENERATE" "Generation of templated Docker files complete."
-}
-
-build() {
-    log "BUILD" "Building Docker image..."
-    _beforebuild
-    cp geo_h.patch "${BUILD_DIR}"
-    cp "${confmap[gsd_distdir]}/${confmap[gsd_dcp_distfile]}" "${BUILD_DIR}"
-    # FIXME
-    currd="$(pwd)"
-    cd "${BUILD_DIR}"
-    docker build -t "$1"  .
-    cd "${currd}"
-    log "BUILD" "Docker image built."
+    _gen_build_script
+    log "GENERATE" "Source file generation complete."
 }
 
 show() {
