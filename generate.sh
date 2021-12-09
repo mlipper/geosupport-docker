@@ -174,6 +174,7 @@ echo docker build -t "geosupport_docker:${confmap[gsd_version]}"  .
 
 EOF
     chmod +x "${scriptf}"
+    echo "$(basename "${scriptf}")" > "${BUILD_DIR}/.dockerignore"
 }
 
 generate() {
