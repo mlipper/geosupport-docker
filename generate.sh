@@ -162,11 +162,17 @@ _gen_build_script() {
 
 set -Eeuo pipefail
 
-if [[ ! $(uname) =~ Darwin ]]; then
-    cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
-else
-    # Darwin most likely
+#
+# TODO Add error handling for macos if GNU readlink isn't available.
+#      E.g., replace use of 'greadlink' with an error message.
+#
+#      Error: GNU readlink required. Install coreutils with brew and
+#      see 'Caveats' message to place gnubin first on the PATH.
+#
+if [[ \$(uname) =~ Darwin ]]; then
     cd "\$(dirname "\$(greadlink -f "\$BASH_SOURCE")")"
+else
+    cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
 fi
 
 echo \$(pwd)
