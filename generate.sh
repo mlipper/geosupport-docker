@@ -87,7 +87,7 @@ clean() {
 # Create an associative array using the keys and values from the file
 # argument passed to this function.
 #
-initialize_confmap() {
+_init_confmap() {
     [[ -f "$1" ]] || die "File $1 does not exist."
     local conf="$1"
     local key
@@ -116,7 +116,7 @@ initialize_confmap() {
 # and the tokenized placeholder properties are replaced with their actual
 # values.
 #
-conf2sedf() {
+_conf2sedf() {
     [[ -z "$1" ]] && die "Function onf2sedf requires the path to the generated sed file as an argument."
     local v
     local pattern
@@ -135,7 +135,7 @@ conf2sedf() {
 # NOTE: Global variables (e.g., BUILD_DIR) are _not_ available yet
 #       when this function gets called.
 #
-derive_unset_properties() {
+_set_missing_props() {
     local version_prefix="${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}"
     if [[ ! -n "${confmap[geosupport_fullversion]}" ]]; then
         # Uses '.' to separate major and minor version (unlike 'gsd_dcp_distfile' below)
@@ -188,7 +188,7 @@ generate() {
     _prepare_build_dir
     local sedf="${BUILD_DIR}/release.sed"
     # Generate sedfile from key-value pairs in release.conf
-    conf2sedf "${sedf}"
+    _conf2sedf "${sedf}"
     # Run sed against all *.template files to replace token strings (@<string>@)
     # with configuration values using the patterns in the generated sedfile
     for tplf in $(ls *.template); do
@@ -225,7 +225,7 @@ main() {
     # Initialize confmap from from file __first__. This way, properties
     # from the commandline will have precedence over those that
     # also exist in the file.
-    initialize_confmap release.conf
+    _init_confmap release.conf
 
     while [ $# -gt 0 ]; do
         # Necessary!
@@ -278,7 +278,7 @@ main() {
     done
 
     # Default optional properties not given at the commandline
-    derive_unset_properties
+    _set_missing_props
 
     BUILD_DIR="${confmap[gsd_builddir]}"
 
