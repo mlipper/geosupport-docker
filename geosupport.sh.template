@@ -15,6 +15,7 @@ switches=()
 # Environment
 #
 
+export GEOSUPPORT_FULL_VERSION="@geosupport_fullversion@"
 export GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-@geosupport_basedir@}"
 export GEOSUPPORT_HOME="${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
 export GEOFILES="${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
@@ -30,36 +31,20 @@ die() {
     exit 1
 }
 
-info() {
-cat <<- EOF
-
-# Version
-GEOSUPPORT_RELEASE=@geosupport_release@
-GEOSUPPORT_PATCH=@geosupport_patch@
-GEOSUPPORT_MAJOR=@geosupport_major@
-GEOSUPPORT_MINOR=@geosupport_minor@
-GEOSUPPORT_FULL_VERSION=@geosupport_fullversion@
-
-# Environment
-GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR}"
-   GEOSUPPORT_HOME="${GEOSUPPORT_HOME}"
-          GEOFILES="${GEOFILES}"
-   GS_LIBRARY_PATH="${GS_LIBRARY_PATH}"
-   GS_INCLUDE_PATH="${GS_INCLUDE_PATH}"
-
-
-EOF
+_install_files() {
+    local cdir="$(pwd)"
+    mkdir -p ${GEOSUPPORT_BASEDIR} \
+        && cd ${GEOSUPPORT_BASEDIR} \
+        && tar xzvf ${GEOSUPPORT_DISTFILE} \
+        && ln -s ${GEOSUPPORT_FULL_VERSION} ${GEOSUPPORT_HOME}
+    cd "${cdir}"
 }
 
 #
-# By default, Geosupport libs are visible to the dynamic linker by setting
-# the LD_LIBRARY_PATH environment variable.
+# Configures how the Geosupport shared library files are located by ld
+# at runtime using the 'switches' global variable.
 #
-# If the environment contains a variable named GEOSUPPORT_LDCONFIG whose
-# value is not null or an empty string, ldconfig is used instead.
-# However, the call to ldconfig must be run as root.
-#
-install() {
+_configure_so_path() {
     local ldconfig=
     local ldlibpath=
     for s in ${switches}; do
@@ -76,22 +61,47 @@ install() {
         esac
     done
     if [ -n "${ldconfig}" ]; then
-        # Will fail if not run as root
+        # Add GS_LIBRARY_PATH to the system runtime shared library path using ldconfig.
+        # This usually requires superuser (root) privileges.
         echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf
         ldconfig
         #echo "Result of \$GS_LIBRARY_PATH > /etc/ld.so.conf.d/geosupport.conf after calling ldconfig:"
         #echo "$(ldconfig -p | grep -i ${GS_LIBRARY_PATH})"
-    fi
+    else
+        # Add GS_LIBRARY_PATH to the LD_LIBRARY_PATH
+        if [ -n "${ldlibpath}" ]; then
+            [[ "$LD_LIBRARY_PATH" =~ "${GS_LIBRARY_PATH}" ]] || \
+                export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
+            #echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+        fi # End ldlibpath
+    fi # End ldconfig
+}
 
-    if [ -n "${ldlibpath}" ]; then
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
-        #echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
-    fi
+#
+# Adds $GEOSUPPORT/bin to the PATH if it's not already there.
+#
+# TODO Make persistent?
+#      echo "${GEOSUPPORT_HOME}/bin" >> $HOME/.profile
+#        or
+#      echo "${GEOSUPPORT_HOME}/bin" > /etc/profile.d/geosupport.sh
+#
+_configure_path() {
+    [[ "$PATH" =~ "${GEOSUPPORT_HOME}/bin" ]] || \
+        export PATH="${GEOSUPPORT_HOME}/bin:${PATH}"
+}
 
-    #mkdir -p ${GEOSUPPORT_BASEDIR} \
-    #    && cd ${GEOSUPPORT_BASEDIR} \
-    #    && tar xzvf ${GEOSUPPORT_DISTFILE} \
-    #    && ln -nfs ${GEOSUPPORT_BASEDIR}/${GEOSUPPORT_FULL_VERSION} ${GEOSUPPORT_HOME}
+#
+# By default, Geosupport libs are visible to the dynamic linker by setting
+# the LD_LIBRARY_PATH environment variable.
+#
+# If the environment contains a variable named GEOSUPPORT_LDCONFIG whose
+# value is not null or an empty string, ldconfig is used instead.
+# However, the call to ldconfig must be run as root.
+#
+install() {
+    _install_files
+    _configure_so_path
+    _configure_path
 }
 
 usage() {
@@ -107,7 +117,7 @@ Commands:
   environment   Print Geosupport environment variable names and current values.
 
   goat          Run a simple client for using Geosupport interactively from
-                the command line.
+                the command line. Fails if Geosupport has not been installed.
 
   help          Show this usage message and exit.
 
@@ -117,15 +127,65 @@ Commands:
 
                   --ldconfig    Permanently adds GS_LIBRARY_PATH to the
                                 runtime shared library path.
-                                NOTE: Usually requires root privileges
+
+                                NOTE: Use of this option causes '--ldlibpath'
+                                to be ignored if it also appears on the
+                                command line.
+
+                                NOTE: Requires root privileges
 
                   --ldlibpath   Adds GS_LIBRARY_PATH to the LD_LIBRARY_PATH
                                 variable.
+
+                                NOTE: This option will be ignored if
+                                '--ldconfig' also appears on the command line.
 
   version       Print Geosupport release and version information.
 
 EOF
 }
+
+_env() {
+cat <<- EOF
+
+Geosupport Environment Variables
+--------------------------------
+
+GEOSUPPORT_BASEDIR=${GEOSUPPORT_BASEDIR}
+   GEOSUPPORT_HOME=${GEOSUPPORT_HOME}
+          GEOFILES=${GEOFILES}
+   GS_LIBRARY_PATH=${GS_LIBRARY_PATH}
+   GS_INCLUDE_PATH=${GS_INCLUDE_PATH}
+
+EOF
+}
+
+_version() {
+cat <<- EOF
+
+Geosupport @geosupport_fullversion@
+-----------------------------------
+
+     Release: @geosupport_release@
+       Patch: @geosupport_patch@
+       Major: @geosupport_major@
+       Minor: @geosupport_minor@
+
+        Arch: x86_64, amd64
+        Name: Geosupport for Linux
+
+Geosupport is written and maintained by the NYC Department of City Planning.
+https://www1.nyc.gov/site/planning/data-maps/open-data.page#geocoding_application
+
+This Geosupport distribution was generated using the geosupport-docker project
+by Matthew Lipper.
+https://github.com/mlipper/geosupport-docker
+https://hub.docker.com/r/mlipper/geosupport-docker
+
+
+EOF
+}
+
 
 main() {
 
@@ -157,13 +217,15 @@ main() {
     for cmd in "${commands[@]}"; do
         case "${cmd}" in
             environment)
-                usage ;;
+                _env ;;
+            goat)
+                echo "goat" ;;
             help)
                 usage ;;
             install)
                 echo "install" ;;
             version)
-                info ;;
+                _version ;;
             *)
                 die "Unknown command "${cmd}"" ;;
         esac
