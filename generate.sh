@@ -155,6 +155,22 @@ _prepare_build_dir() {
     cp "${confmap[gsd_distdir]}/${confmap[gsd_dcp_distfile]}" "${BUILD_DIR}"
 }
 
+#
+# Generates a script for invoking 'docker build' from the $BUILD_DIR.
+#
+# TODO Add error handling for macos if GNU readlink isn't available.
+#
+#      # Better:
+#      Error: GNU readlink required. Install coreutils with brew and
+#      see 'Caveats' message to place gnubin first on the PATH.
+#        or
+#      # Worse:
+#      if [[ \$(uname) =~ Darwin ]]; then
+#        cd "\$(dirname "\$(greadlink -f "\$BASH_SOURCE")")"
+#      else
+#        cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
+#      fi
+#
 _gen_build_script() {
     local scriptf="${BUILD_DIR}/build-image.sh"
     cat <<- EOF > "${scriptf}"
@@ -162,21 +178,9 @@ _gen_build_script() {
 
 set -Eeuo pipefail
 
-#
-# TODO Add error handling for macos if GNU readlink isn't available.
-#      E.g., replace use of 'greadlink' with an error message.
-#
-#      Error: GNU readlink required. Install coreutils with brew and
-#      see 'Caveats' message to place gnubin first on the PATH.
-#
-if [[ \$(uname) =~ Darwin ]]; then
-    cd "\$(dirname "\$(greadlink -f "\$BASH_SOURCE")")"
-else
-    cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
-fi
+cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
 
-echo \$(pwd)
-echo docker build -t "geosupport_docker:${confmap[gsd_version]}"  .
+docker build -t "geosupport_docker:${confmap[gsd_version]}"  .
 
 EOF
     chmod +x "${scriptf}"
