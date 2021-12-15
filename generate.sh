@@ -180,7 +180,7 @@ set -Eeuo pipefail
 
 cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
 
-docker build -t "geosupport_docker:${confmap[gsd_version]}"  .
+docker build -t "geosupport-docker:${confmap[gsd_version]}"  .
 
 EOF
     chmod +x "${scriptf}"
