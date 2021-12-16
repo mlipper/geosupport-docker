@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -eu
+
+echo "[SRC'D] ${BASH_SOURCE[0]}"
+
+export GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-@geosupport_basedir@}"
+export GEOSUPPORT_HOME="${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
+export GEOFILES="${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
+export GS_LIBRARY_PATH="${GS_LIBRARY_PATH:-${GEOSUPPORT_HOME}/lib}"
+export GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
+
+export PATH="${GEOSUPPORT_HOME}":$PATH
+
+for arg in "$@"; do
+    case "${arg}" in
+    ldconfig)
+        # Add GS_LIBRARY_PATH to the system runtime shared library path using ldconfig.
+        # This usually requires superuser (root) privileges.
+        echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf
+        ldconfig
+        ;;
+    ldlibpath)
+        # Add GS_LIBRARY_PATH to the LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
+        ;;
+    esac
+done
