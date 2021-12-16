@@ -35,10 +35,15 @@ RUN set -eux; \
         rm /geosupport.zip; \
         rm /geo_h.patch;
 
-VOLUME "${GEOSUPPORT_DISTDIR}"
+
+FROM scratch AS distributor
+COPY --from=repackager "@geosupport_basedir@/repo/geosupport-@geosupport_fullversion@.tgz" "@geosupport_basedir@/repo/geosupport-@geosupport_fullversion@.tgz"
+VOLUME "@geosupport_basedir@/repo/"
+COPY hello @geosupport_basedir@/repo/hello
+CMD [ "@geosupport_basedir@/repo/hello" ]
 
 ARG VARIANT=@gsd_baseimage@
-FROM ${VARIANT} AS installer
+FROM ${VARIANT}
 
 ENV GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-@geosupport_basedir@}"
 ENV GEOSUPPORT_DISTDIR="${GEOSUPPORT_DISTDIR:-@geosupport_basedir@/repo}"
@@ -50,26 +55,26 @@ ENV GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
 
 ENV LANG C.UTF-8
 
-COPY --from=repackager "${GEOSUPPORT_DISTDIR}/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz" /geosupport.tgz
+COPY --from=distributor "${GEOSUPPORT_DISTDIR}/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz" /geosupport.tgz
+
+WORKDIR "${GEOSUPPORT_BASEDIR}"
 
 RUN set -eux; \
         \
-        mkdir -p "${GEOSUPPORT_BASEDIR}"; \
-        cd "${GEOSUPPORT_BASEDIR}"; \
         tar xzvf /geosupport.tgz; \
         ln -s "version-${GEOSUPPORT_FULL_VERSION}" "${GEOSUPPORT_HOME}"; \
         rm /geosupport.tgz; \
+# Shared library configuration requires root!
         echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf; \
         ldconfig; \
+# 
         initenvf="${GEOSUPPORT_HOME}/bin/initenv"; \
         { \
 # TODO Clean up generated initenv file: include ldconfig logic here?
             echo '#!/usr/bin/env bash'; \
-            echo 'set -Eeuo pipefail'; \
+            echo 'set -eu'; \
             echo "export GEOSUPPORT_HOME=${GEOSUPPORT_HOME}"; \
             echo "export GEOFILES=${GEOSUPPORT_HOME}/fls/"; \
-            echo "export GEOSUPPORT_=${}"; \
-            echo "export GEOSUPPORT_=${}"; \
             echo "export GS_LIBRARY_PATH=${GS_LIBRARY_PATH}"; \
             echo "export GS_INCLUDE_PATH=${GS_INCLUDE_PATH}"; \
             echo "export PATH=${GEOSUPPORT_HOME}/bin:\$PATH"; \
