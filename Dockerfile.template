@@ -1,49 +1,12 @@
 # syntax=docker/dockerfile:1
-
-ARG VARIANT=@gsd_baseimage@
-FROM ${VARIANT} AS repackager
-
-ENV GEOSUPPORT_DISTDIR @geosupport_basedir@/repo
-ENV GEOSUPPORT_FULL_VERSION @geosupport_fullversion@
-
-RUN set -ex; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-        patch \
-        unzip \
-    ; \
-    rm -rf /var/lib/apt/lists/*;
-
-COPY @gsd_dcp_distfile@ /geosupport.zip
-COPY geo_h.patch /geo_h.patch
-
-WORKDIR "${GEOSUPPORT_DISTDIR}"
-
-RUN set -eux; \
-        \
-        echo "Extracting zip file /geosupport.zip to ${GEOSUPPORT_DISTDIR} directory."; \
-        mkdir "version-${GEOSUPPORT_FULL_VERSION}"; \
-        unzip -qj /geosupport.zip "**/bin/c_client" -d "version-${GEOSUPPORT_FULL_VERSION}/bin"; \
-        unzip -qj /geosupport.zip "**/fls/*" -d "version-${GEOSUPPORT_FULL_VERSION}/fls"; \
-        unzip -qj /geosupport.zip "**/include/foruser/*" -d "version-${GEOSUPPORT_FULL_VERSION}/include"; \
-        unzip -qj /geosupport.zip "**/lib/*" -d "version-${GEOSUPPORT_FULL_VERSION}/lib"; \
-        mv "version-${GEOSUPPORT_FULL_VERSION}/bin/c_client" "version-${GEOSUPPORT_FULL_VERSION}/bin/goat"; \
-        mv "version-${GEOSUPPORT_FULL_VERSION}/include/geo.h" "version-${GEOSUPPORT_FULL_VERSION}/include/geo.h.orig"; \
-        patch -i /geo_h.patch -o "version-${GEOSUPPORT_FULL_VERSION}/include/geo.h" "version-${GEOSUPPORT_FULL_VERSION}/include/geo.h.orig"; \
-        tar czvf "geosupport-${GEOSUPPORT_FULL_VERSION}.tgz" "version-${GEOSUPPORT_FULL_VERSION}"; \
-        rm -rf "version-${GEOSUPPORT_FULL_VERSION}"; \
-        rm /geosupport.zip; \
-        rm /geo_h.patch;
-
-
-FROM scratch AS distributor
-COPY --from=repackager "@geosupport_basedir@/repo/geosupport-@geosupport_fullversion@.tgz" "@geosupport_basedir@/repo/geosupport-@geosupport_fullversion@.tgz"
-VOLUME "@geosupport_basedir@/repo/"
-COPY hello @geosupport_basedir@/repo/hello
-CMD [ "@geosupport_basedir@/repo/hello" ]
-
 ARG VARIANT=@gsd_baseimage@
 FROM ${VARIANT}
+
+LABEL com.digitalclash.gsd.version=@gsd_version@
+LABEL com.digitalclash.gsd.geosupport.major=@geosupport_major@
+LABEL com.digitalclash.gsd.geosupport.minor=@geosupport_minor@
+LABEL com.digitalclash.gsd.geosupport.patch=@geosupport_patch@
+LABEL com.digitalclash.gsd.geosupport.release=@geosupport_release@
 
 ENV GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-@geosupport_basedir@}"
 ENV GEOSUPPORT_DISTDIR="${GEOSUPPORT_DISTDIR:-@geosupport_basedir@/repo}"
@@ -52,10 +15,11 @@ ENV GEOSUPPORT_HOME="${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
 ENV GEOFILES="${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
 ENV GS_LIBRARY_PATH="${GS_LIBRARY_PATH:-${GEOSUPPORT_HOME}/lib}"
 ENV GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
+ENV PATH="${GEOSUPPORT_HOME}/bin:$PATH"
 
 ENV LANG C.UTF-8
 
-COPY --from=distributor "${GEOSUPPORT_DISTDIR}/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz" /geosupport.tgz
+COPY --from=geosupport-docker:@gsd_version@-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
 
 WORKDIR "${GEOSUPPORT_BASEDIR}"
 
@@ -66,25 +30,6 @@ RUN set -eux; \
         rm /geosupport.tgz; \
 # Shared library configuration requires root!
         echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf; \
-        ldconfig; \
-# 
-        initenvf="${GEOSUPPORT_HOME}/bin/initenv"; \
-        { \
-# TODO Clean up generated initenv file: include ldconfig logic here?
-            echo '#!/usr/bin/env bash'; \
-            echo 'set -eu'; \
-            echo "export GEOSUPPORT_HOME=${GEOSUPPORT_HOME}"; \
-            echo "export GEOFILES=${GEOSUPPORT_HOME}/fls/"; \
-            echo "export GS_LIBRARY_PATH=${GS_LIBRARY_PATH}"; \
-            echo "export GS_INCLUDE_PATH=${GS_INCLUDE_PATH}"; \
-            echo "export PATH=${GEOSUPPORT_HOME}/bin:\$PATH"; \
-        } > "${initenvf}"; \
-        chmod +x "${initenvf}";
+        ldconfig;
 
-ENV PATH ${GEOSUPPORT_HOME}/bin:$PATH
-
-COPY geosupport.sh "${GEOSUPPORT_BASEDIR}/version-${GEOSUPPORT_FULL_VERSION}/bin/geosupport.sh"
-
-RUN set -eux; \
-        \
-        chmod +x "${GEOSUPPORT_BASEDIR}/version-${GEOSUPPORT_FULL_VERSION}/bin/geosupport.sh";
+CMD ["goat"]
