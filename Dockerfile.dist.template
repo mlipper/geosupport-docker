@@ -2,7 +2,8 @@
 ARG VARIANT=@gsd_baseimage@
 FROM ${VARIANT} AS builder
 
-LABEL com.digitalclash.gsd.dist.version=@gsd_version@
+LABEL com.digitalclash.gsd.tag=@gsd_tag@
+LABEL com.digitalclash.gsd.dist.version=@gsd_dist_version@
 LABEL com.digitalclash.gsd.geosupport.major=@geosupport_major@
 LABEL com.digitalclash.gsd.geosupport.minor=@geosupport_minor@
 LABEL com.digitalclash.gsd.geosupport.patch=@geosupport_patch@
@@ -21,7 +22,7 @@ RUN set -ex; \
 
 WORKDIR /dist
 
-COPY message.c.template ./message.c
+COPY message.c ./message.c
 RUN set -ex; \
         gcc -o message --static message.c; \
         rm message.c
@@ -30,9 +31,11 @@ COPY @gsd_dcp_distfile@ ./geosupport.zip
 COPY geo_h.patch ./geo_h.patch
 COPY initenv.sh ./initenv
 
+ENV GEOSUPPORT_FULL_VERSION="${GEOSUPPORT_FULL_VERSION:-@geosupport_fullversion@}"
+
 RUN set -eux; \
 # Extract the DCP zip file to /dist
-        version_dir="version-${GEOSUPPORT_FULL_VERSION:-@geosupport_fullversion@}"; \
+        version_dir="version-${GEOSUPPORT_FULL_VERSION}"; \
         mkdir "${version_dir}"; \
         unzip -qj geosupport.zip "**/bin/c_client" -d "${version_dir}/bin"; \
         unzip -qj geosupport.zip "**/fls/*" -d "${version_dir}/fls"; \
@@ -49,7 +52,7 @@ RUN set -eux; \
         chmod +x initenv; \
         mv initenv "${version_dir}/bin/initenv"; \
 # Create the gzipped distribution
-        tar czvf "${version_dir}.tgz" "${version_dir}"; \
+        tar czvf "geosupport-${GEOSUPPORT_FULL_VERSION}.tgz" "${version_dir}"; \
         rm -rf "${version_dir}";
 
 FROM scratch

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eu
 
 echo "[SRC'D] ${BASH_SOURCE[0]}"
 
