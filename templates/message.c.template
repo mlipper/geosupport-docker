@@ -9,9 +9,17 @@
 	#define GSD_ARCH "amd64"
 #endif
 
+/*
+ * This file is adapted from Docker's hello-world image source.
+ * See:
+ *     https://github.com/docker-library/hello-world/
+ *     https://github.com/docker-library/hello-world/blob/master/hello.c/
+ *     https://www.docker.com/
+ */
+
 const char message[] =
 	"\n"
-	GSD_IMAGE " (" GSD_ARCH ")\n"
+	GSD_IMAGE " (linux/" GSD_ARCH ")\n"
 	"\n";
 
 int main() {
