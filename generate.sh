@@ -196,8 +196,8 @@ generate() {
     _conf2sedf "${sedf}"
     # Run sed against all *.template files to replace token strings (@<string>@)
     # with configuration values using the patterns in the generated sedfile
-    for tplf in $(ls *.template); do
-        sed -f "${sedf}" <"${tplf}" >"${BUILD_DIR}/${tplf%%.template}"
+    for tplf in $(ls templates/*.template); do
+        sed -f "${sedf}" <"${tplf}" >"${BUILD_DIR}/$(basename ${tplf%%.template})"
     done
     rm "${sedf}"
     _gen_build_script
