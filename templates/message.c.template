@@ -1,12 +1,16 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-#ifndef GSD_IMAGE
+#ifndef GSD_INFO
+    #define GSD_INFO "defined"
+	#define GSD_ARCH "Linux x86-64 (amd64)"
+    #define GSD_DCP_DISTFILE "@gsd_dcp_distfile@"
 	#define GSD_IMAGE "@gsd_tag@:@gsd_dist_version@"
-#endif
-
-#ifndef GSD_ARCH
-	#define GSD_ARCH "amd64"
+    #define GEOSUPPORT_FULLVERSION "@geosupport_fullversion@"
+    #define GEOSUPPORT_MAJOR "@geosupport_major@"
+    #define GEOSUPPORT_MINOR "@geosupport_minor@"
+    #define GEOSUPPORT_PATCH "@geosupport_patch@"
+    #define GEOSUPPORT_RELEASE "@geosupport_release@"
 #endif
 
 /*
@@ -19,7 +23,12 @@
 
 const char message[] =
 	"\n"
-	GSD_IMAGE " (linux/" GSD_ARCH ")\n"
+	GSD_IMAGE " " GSD_ARCH "\n"
+    "Geosupport " GEOSUPPORT_FULLVERSION " built from DCP file " GSD_DCP_DISTFILE ":\n"
+    "    Major: " GEOSUPPORT_MAJOR "\n"
+    "  Release: " GEOSUPPORT_RELEASE "\n"
+    "    Patch: " GEOSUPPORT_PATCH "\n"
+    "    Minor: " GEOSUPPORT_MINOR "\n"
 	"\n";
 
 int main() {

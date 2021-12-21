@@ -20,19 +20,17 @@ ENV PATH="${GEOSUPPORT_HOME}/bin:$PATH"
 ENV LANG C.UTF-8
 
 COPY --from=geosupport-docker:@gsd_version@-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
-#COPY --from=geosupport-docker:@gsd_version@-dist /dist /dist
 
 WORKDIR "${GEOSUPPORT_BASEDIR}"
 
 RUN set -eux; \
         \
-#        mv "/dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz" geosupport.tgz; \
         tar xzvf /geosupport.tgz; \
         ln -s "version-${GEOSUPPORT_FULL_VERSION}" "${GEOSUPPORT_HOME}"; \
-        rm /geosupport.tgz
-#        rm /geosupport.tgz; \
-## Shared library configuration requires root!
-#        echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf; \
-#        ldconfig;
+        rm /geosupport.tgz; \
+# Shared library configuration requires root!
+        echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf; \
+        ldconfig;
 
-CMD ["/bin/bash", "-c", "source ${GEOSUPPORT_HOME}/bin/initenv ldconfig"]
+# CMD ["/bin/bash", "-c", "source ${GEOSUPPORT_HOME}/bin/initenv ldconfig"]
+CMD ["goat"]

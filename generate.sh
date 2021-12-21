@@ -99,8 +99,7 @@ _init_confmap() {
           && ! [[ "$line" =~ ^$ ]]; then # Skip comments, blank lines
             key="${line%%=*}"
             val="${line#*=}"
-            confmap["${key}"]="${val}"
-            #log "DEBUG" "${key}: ${val}"
+            _setc "${key}" "${val}"
         fi
     done < "${conf}"
 }
@@ -129,6 +128,29 @@ _conf2sedf() {
 }
 
 #
+# Echos the value of the given configuration key to stdout if
+# it exists in the confmap global.
+# $1 = Key string
+#
+_getc() {
+    local key=$1
+    [[ -z "${key}" ]] && return
+    local value="${confmap[${key}]}"
+    [[ -n "${value}" ]] && echo "${value}"
+}
+
+#
+# Sets confmap value using the given key.
+# $1 = Key string
+# $2 = Value
+#
+_setc() {
+    local key=$1
+    local value=$2
+    confmap["${key}"]="${value}"
+}
+
+#
 # Initializes any derived properties which have not been set from the
 # configuration file or script parameters but are required.
 #
@@ -136,14 +158,18 @@ _conf2sedf() {
 #       when this function gets called.
 #
 _set_missing_props() {
-    local version_prefix="${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}"
-    if [[ ! -n "${confmap[geosupport_fullversion]}" ]]; then
+    local major="$(_getc geosupport_major)"
+    local release="$(_getc geosupport_release)"
+    local patch="$(_getc geosupport_patch)"
+    local minor="$(_getc geosupport_minor)"
+    local version_prefix="${major}${release}${patch}_${major}"
+    if [[ ! -n "$(_getc geosupport_fullversion)" ]]; then
         # Uses '.' to separate major and minor version (unlike 'gsd_dcp_distfile' below)
-        confmap["geosupport_fullversion"]="${version_prefix}.${confmap[geosupport_minor]}"
+        _setc "geosupport_fullversion" "${version_prefix}.${minor}"
     fi
-    if [[ ! -n "${confmap[gsd_dcp_distfile]}" ]]; then
+    if [[ ! -n "$(_getc gsd_dcp_distfile)" ]]; then
         # Uses '_' to separate major and minor version (unlike 'geosupport_fullversion' above)
-        confmap["gsd_dcp_distfile"]="linux_geo${confmap[geosupport_major]}${confmap[geosupport_release]}${confmap[geosupport_patch]}_${confmap[geosupport_major]}_${confmap[geosupport_minor]}.zip"
+        _setc "gsd_dcp_distfile" "linux_geo${version_prefix}_${minor}.zip"
     fi
 }
 
@@ -152,7 +178,7 @@ _prepare_build_dir() {
     mkdir -p "${BUILD_DIR}"
     # Copy non-templated files to build directory
     cp geo_h.patch "${BUILD_DIR}"
-    cp "${confmap[gsd_distdir]}/${confmap[gsd_dcp_distfile]}" "${BUILD_DIR}"
+    cp "$(_getc gsd_distdir)/$(_getc gsd_dcp_distfile)" "${BUILD_DIR}"
 }
 
 #
@@ -180,8 +206,8 @@ set -Eeuo pipefail
 
 cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
 
-docker build -t "${confmap[gsd_tag]}:${confmap[gsd_dist_version]}"  -f Dockerfile.dist .
-docker build -t "${confmap[gsd_tag]}:${confmap[gsd_version]}"  -f Dockerfile .
+docker build -t "$(_getc gsd_tag):$(_getc gsd_dist_version)"  -f Dockerfile.dist .
+docker build -t "$(_getc gsd_tag):$(_getc gsd_version)"  -f Dockerfile .
 
 EOF
     chmod +x "${scriptf}"
@@ -246,7 +272,7 @@ main() {
                 prop="${OPTARG}"
                 k="${prop%%=*}"
                 v="${prop#*=}"
-                confmap["${k}"]="${v:-true}"
+                _setc "${k}" "${v:-true}"
                 ;;
             \?)
                 echo "Invalid Option: -$OPTARG" 1>&2
@@ -285,7 +311,7 @@ main() {
     # Default optional properties not given at the commandline
     _set_missing_props
 
-    BUILD_DIR="${confmap[gsd_builddir]}"
+    BUILD_DIR="$(_getc gsd_builddir)"
 
     for action in "${actions[@]}"; do
         case "${action}" in
