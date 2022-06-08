@@ -98,7 +98,7 @@ _configure_path() {
 # value is not null or an empty string, ldconfig is used instead.
 # However, the call to ldconfig must be run as root.
 #
-install() {
+_install() {
     _install_files
     _configure_so_path
     _configure_path
@@ -160,6 +160,10 @@ GEOSUPPORT_BASEDIR=${GEOSUPPORT_BASEDIR}
 EOF
 }
 
+_goat() {
+    "${GEOSUPPORT_HOME}/bin/goat"
+}
+
 _version() {
 cat <<- EOF
 
@@ -196,11 +200,20 @@ main() {
             -e | environment)
                 commands+=( "environment" ); shift
                 ;;
+            goat)
+                commands+=( "goat" ); shift
+                ;;
             -h | help)
                 commands+=( "help" ); shift
                 ;;
             -i | install)
                 commands+=( "install" ); shift
+                ;;
+            -p | path)
+                commands+=( "path" ); shift
+                ;;
+            -s | sopath)
+                commands+=( "sopath" ); shift
                 ;;
             -v | version)
                 commands+=( "version" ); shift
@@ -219,11 +232,15 @@ main() {
             environment)
                 _env ;;
             goat)
-                echo "goat" ;;
+                _goat ;;
             help)
                 usage ;;
             install)
-                echo "install" ;;
+                _install ;;
+            path)
+                _configure_path ;;
+            sopath)
+                _configure_so_path ;;
             version)
                 _version ;;
             *)
