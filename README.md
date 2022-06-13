@@ -4,7 +4,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 ## Dockerfile.dist
 
-Provides `dist` image built from `scratch` which contains only a patched and repackaged version of Geosupport allowing for full control and configuration from an unrelated Dockerfile. E.g., simplified creation of volumes and "data-packed volume containers".
+Provides distribution image built from `scratch` which contains only a patched and repackaged version of Geosupport allowing for full control and configuration from an unrelated Dockerfile. E.g., simplified creation of volumes and "data-packed volume containers".
 
 ```Dockerfile
 FROM some-image:latest
@@ -20,9 +20,52 @@ COPY --from=geosupport-docker:latest-dist /dist/geosupport-${GEOSUPPORT_FULL_VER
 
 ## Dockerfile
 
-Provides a fully functional Geosupport installation -- by default, built from `debian-slim`. This image unpacks, installs and configures Geosupport. Although typically overridden, the default `CMD` runs DCP's command line application for making interactive Geosupport calls.
+Provides a fully functional Geosupport installation which, by default, is built from `debian-slim`. This image unpacks, installs and configures Geosupport. Although typically overridden, the default `CMD` runs DCP's command line application for making interactive Geosupport calls.
 
-Currently, this image uses `ldconfig` to add Geosupport shared libraries to the C runtime path, and thus requires `root`. However, a non-root version which relies on `LD_LIBRARY_PATH` can easily be built using this project's `generate.sh` script.
+```sh
+$ docker run -it --rm geosupport-docker:latest
+
+
+------------------------------------------------------------------------------------------
+*****  Enter a function code or 'X' to exit:  hr
+You entered hr
+
+
+Function HR GRC = 00
+...etc.
+```
+
+Or use it to create a volume containing a fully configured installation directory.
+
+```sh
+$ docker volume create geosupport-dist-22a2_22.11
+geosupport-dist-22a2_22.11
+
+$ docker run -it --rm --mount source=geosupport-22a2_22.11,target=/opt/geosupport geosupport-docker:latest pwd
+/opt/geosupport
+
+$ docker run -it --rm --mount source=geosupport-22a2_22.11,target=/opt/geosupport debian:bullseye-slim bash
+root@fc1d63c26dca# cd /opt/geosupport 
+root@fc1d63c26dca# ls -l
+total 4
+lrwxrwxrwx 1 root root   18 Jun 13 18:20 current -> version-22a2_22.11
+drwxr-xr-x 6 root root 4096 Jun 13 18:55 version-22a2_22.11
+```
+
+Remember to set the necessary environment variables and to make sure the dynamic linker can find the Geosupport shared libraries at runtime before using Geosupport.
+This can be done, for example, by sourcing the `$GEOSUPPORT_HOME/bin/initenv` file which takes one required argument: either `ldconfig` or ldlibpath`.
+
+```sh
+# Requires root because it uses the ldconfig command
+. /opt/geosupport/current/bin/initenv ldconfig
+```
+
+Or
+
+```sh
+# Does not require root because it sets/updates the LD_LIBRARY_PATH
+. /opt/geosupport/current/bin/initenv ldlibpath
+```
 
 ## About Geosupport
 
@@ -32,7 +75,7 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 
 The latest news about this project.
 
-#### June 7th, 2021
+#### June 16th, 2022
 
 * **Version 2.0.0 available.** This release wraps `Geosupport 22a2_22.11`.
 
@@ -49,22 +92,26 @@ The latest news about this project.
   >   * `GEOSUPPORT_MINOR` - zero or more digits (minor point version of Geosupport version)
   >   * `GEOSUPPORT_PATCH` - Zero or more digits digit (used as a postfix modifier for `GEOSUPPORT_RELEASE` when needed)
   >   * `GEOSUPPORT_RELEASE` - Lowercase letter (postfix modifier for `GEOSUPPORT_MAJOR` as part of the Geosupport release)
-  > * For example, `Geosupport 22a2_22.11` is composed of the following:
+  > * Previously, `Geosupport 22a2_22.11` was composed of the following:
   >   * Old semantics:
   >     * `<GEOSUPPORT_RELEASE>_<GEOSUPPORT_VERSION>`
   >     * `GEOSUPPORT_RELEASE` = 22a2
   >     * `GEOSUPPORT_VERSION` = 22.11
+  > * With this release of `geosupport-docker`, `Geosupport 22a2_22.11` is now broken down into the following variables:
   >   * New semantics:
   >     * `<GEOSUPPORT_MAJOR><GEOSUPPORT_RELEASE><GEOSUPPORT_PATCH>_<GEOSUPPORT_MAJOR>.<GEOSUPPORT_MINOR>`
   >     * `RELEASE` = a
   >     * `MAJOR` = 22
   >     * `MINOR` = 11
   >     * `PATCH` = 2
-  > * Remove `GEOSUPPORT_DISTFILE` from `geosupport.env` file.
+  > * Remove `GEOSUPPORT_DISTFILE` from `geosupport.env` file
+  > * `geosupport-docker:<version>-dist` image writes the repackaged Geosupport distribution to
+  >   * `/dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz`
   > * Replace `GEOSUPPORT_DISTFILE` with `DISTFILE` build argument.
   > * New `GEOSUPPORT_BASE` variable which defaults to `/opt/geosupport`.
   > * Change default value of `GEOSUPPORT_HOME` from `/opt/geosupport` to `${GEOSUPPORT_BASE}/current`.
-  >   * `GEOSUPPORT_HOME` still refers to the default parent directory of:
+  > * The `current` directory is usually implemented as a symlink allowing for multiple Geosupport versions on the file system for quit version switching.
+  >   * `GEOSUPPORT_HOME` still refers to the actual installation directory of the `current` Geosupport. I.e.,
   >     * `$GEOSUPPORT_HOME/bin` - Added to the container runtime `PATH` environment variable
   >     * `$GEOSUPPORT_HOME/fls/` - Default value for `GEOFILES` environment variable
   >     * `$GEOSUPPORT_HOME/include` - Default value for `GS_INCLUDE_PATH` environment variable
