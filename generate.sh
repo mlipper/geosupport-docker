@@ -171,6 +171,12 @@ _set_missing_props() {
         # Uses '_' to separate major and minor version (unlike 'geosupport_fullversion' above)
         _setc "gsd_dcp_distfile" "linux_geo${version_prefix}_${minor}.zip"
     fi
+    # Set vcs_ref if it is available
+    local vcs_ref="unknown"
+    if command -v git &> /dev/null; then
+        vcs_ref="$(git rev-parse --short HEAD)"
+    fi
+    _setc "vcs_ref" "${vcs_ref}"
 }
 
 _prepare_build_dir() {
@@ -208,10 +214,30 @@ cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
 
 docker build -t "$(_getc gsd_tag):$(_getc gsd_dist_version)"  -f Dockerfile.dist .
 docker build -t "$(_getc gsd_tag):$(_getc gsd_version)"  -f Dockerfile .
-
 EOF
     chmod +x "${scriptf}"
-    echo "$(basename "${scriptf}")" > "${BUILD_DIR}/.dockerignore"
+    echo "$(basename "${scriptf}")" >> "${BUILD_DIR}/.dockerignore"
+}
+
+_gen_vol_script() {
+    local scriptf="${BUILD_DIR}/createvols.sh"
+    cat <<- EOF > "${scriptf}"
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
+
+FULLVER="$(_getc geosupport_fullversion)"
+
+docker volume create "geosupport-dist-\${FULLVER}"
+docker run --rm --mount "source=geosupport-dist-\${FULLVER},target=/dist"  "$(_getc gsd_tag):$(_getc gsd_dist_version)" /bin/true
+
+docker volume create "geosupport-\${FULLVER}"
+docker run --rm --mount "source=geosupport-\${FULLVER},target=$(_getc geosupport_basedir)"  "$(_getc gsd_tag):$(_getc gsd_version)" /bin/true
+EOF
+    chmod +x "${scriptf}"
+    echo "$(basename "${scriptf}")" >> "${BUILD_DIR}/.dockerignore"
 }
 
 generate() {
@@ -227,6 +253,7 @@ generate() {
     done
     rm "${sedf}"
     _gen_build_script
+    _gen_vol_script
     log "GENERATE" "Source file generation complete."
 }
 

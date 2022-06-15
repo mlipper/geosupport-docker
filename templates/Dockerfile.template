@@ -3,6 +3,7 @@ ARG VARIANT=@gsd_baseimage@
 FROM ${VARIANT}
 
 LABEL com.digitalclash.gsd.tag=@gsd_tag@
+LABEL com.digitalclash.gsd.vcs.ref=@vcs_ref@
 LABEL com.digitalclash.gsd.version=@gsd_version@
 LABEL com.digitalclash.gsd.geosupport.major=@geosupport_major@
 LABEL com.digitalclash.gsd.geosupport.minor=@geosupport_minor@

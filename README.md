@@ -20,7 +20,9 @@ COPY --from=geosupport-docker:latest-dist /dist/geosupport-${GEOSUPPORT_FULL_VER
 
 ## Dockerfile
 
-Provides a fully functional Geosupport installation which, by default, is built from `debian-slim`. This image unpacks, installs and configures Geosupport. Although typically overridden, the default `CMD` runs DCP's command line application for making interactive Geosupport calls.
+Provides a fully functional Geosupport installation which, by default, is built from othe parent image `debian:bullseye-slim`. This `Dockerfile` unpacks, installs and configures Geosupport.
+
+The default `CMD` runs DCP's command line application for making interactive Geosupport calls.
 
 ```sh
 $ docker run -it --rm geosupport-docker:latest
@@ -35,15 +37,17 @@ Function HR GRC = 00
 ...etc.
 ```
 
-Or use it to create a volume containing a fully configured installation directory.
+However, the most common usage of this `Dockerfile` is for creating a volume containing a complete Geosupport installation directory.
 
 ```sh
-$ docker volume create geosupport-dist-22a2_22.11
-geosupport-dist-22a2_22.11
+# Create a named volume using the Docker CLI
+$ docker volume create geosupport-22a2_22.11
+geosupport-22a2_22.11
 
-$ docker run -it --rm --mount source=geosupport-22a2_22.11,target=/opt/geosupport geosupport-docker:latest pwd
-/opt/geosupport
+# Populate the volume with the contents of GEOSUPPORT_BASE (replace the default CMD with a simple no-op command)
+$ docker run -it --rm --mount source=geosupport-22a2_22.11,target=/opt/geosupport geosupport-docker:latest /bin/true
 
+# Run an interactive bash shell in a new container to test the named volume
 $ docker run -it --rm --mount source=geosupport-22a2_22.11,target=/opt/geosupport debian:bullseye-slim bash
 root@fc1d63c26dca# cd /opt/geosupport 
 root@fc1d63c26dca# ls -l
@@ -53,7 +57,7 @@ drwxr-xr-x 6 root root 4096 Jun 13 18:55 version-22a2_22.11
 ```
 
 Remember to set the necessary environment variables and to make sure the dynamic linker can find the Geosupport shared libraries at runtime before using Geosupport.
-This can be done, for example, by sourcing the `$GEOSUPPORT_HOME/bin/initenv` file which takes one required argument: either `ldconfig` or ldlibpath`.
+This can be done, for example, by sourcing the `$GEOSUPPORT_HOME/bin/initenv` file which takes one required argument: either `ldconfig` or `ldlibpath`.
 
 ```sh
 # Requires root because it uses the ldconfig command
