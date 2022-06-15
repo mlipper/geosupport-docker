@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
-ARG VARIANT=@gsd_baseimage@
+ARG VARIANT=@baseimage@
 FROM ${VARIANT}
 
-LABEL com.digitalclash.gsd.tag=@gsd_tag@
-LABEL com.digitalclash.gsd.version=@gsd_version@
+LABEL com.digitalclash.gsd.image=@image_name@
+LABEL com.digitalclash.gsd.tag=@image_tag@
+LABEL com.digitalclash.gsd.vcs.ref=@vcs_ref@
 LABEL com.digitalclash.gsd.geosupport.major=@geosupport_major@
 LABEL com.digitalclash.gsd.geosupport.minor=@geosupport_minor@
 LABEL com.digitalclash.gsd.geosupport.patch=@geosupport_patch@
@@ -19,7 +20,7 @@ ENV PATH="${GEOSUPPORT_HOME}/bin:$PATH"
 
 ENV LANG C.UTF-8
 
-COPY --from=geosupport-docker:@gsd_version@-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
+COPY --from=@image_name@:@image_tag@-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
 
 WORKDIR "${GEOSUPPORT_BASEDIR}"
 
@@ -28,9 +29,6 @@ RUN set -eux; \
         tar xzvf /geosupport.tgz; \
         ln -s "version-${GEOSUPPORT_FULL_VERSION}" "${GEOSUPPORT_HOME}"; \
         rm /geosupport.tgz; \
-# Shared library configuration requires root!
-        echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf; \
-        ldconfig;
+        "${GEOSUPPORT_HOME}/bin/geosupport" install
 
-# CMD ["/bin/bash", "-c", "source ${GEOSUPPORT_HOME}/bin/initenv ldconfig"]
-CMD ["goat"]
+CMD ["geosupport", "-v"]

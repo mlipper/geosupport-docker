@@ -2,25 +2,16 @@
 
 set -Eeuo pipefail
 
-cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
+this_dir="$(dirname "$(readlink -vf "$BASH_SOURCE")")"
+this_file="$(basename "$0")"
+
+cd "${this_dir}"
 
 #
 # Globals
 #
 
-commands=()
-switches=()
-
-#
-# Environment
-#
-
-export GEOSUPPORT_FULL_VERSION="@geosupport_fullversion@"
-export GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-@geosupport_basedir@}"
-export GEOSUPPORT_HOME="${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
-export GEOFILES="${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
-export GS_LIBRARY_PATH="${GS_LIBRARY_PATH:-${GEOSUPPORT_HOME}/lib}"
-export GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
+declare -a commands
 
 #
 # Functions
@@ -29,79 +20,6 @@ export GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
 die() {
     echo "$*" 1>&2
     exit 1
-}
-
-_install_files() {
-    local cdir="$(pwd)"
-    mkdir -p ${GEOSUPPORT_BASEDIR} \
-        && cd ${GEOSUPPORT_BASEDIR} \
-        && tar xzvf ${GEOSUPPORT_DISTFILE} \
-        && ln -s ${GEOSUPPORT_FULL_VERSION} ${GEOSUPPORT_HOME}
-    cd "${cdir}"
-}
-
-#
-# Configures how the Geosupport shared library files are located by ld
-# at runtime using the 'switches' global variable.
-#
-_configure_so_path() {
-    local ldconfig=
-    local ldlibpath=
-    for s in ${switches}; do
-        case "${s}" in
-            ldconfig)
-                ldconfig="true"
-                ;;
-            ldlibpath)
-                ldlibpath="true"
-                ;;
-            *)
-                continue
-                ;;
-        esac
-    done
-    if [ -n "${ldconfig}" ]; then
-        # Add GS_LIBRARY_PATH to the system runtime shared library path using ldconfig.
-        # This usually requires superuser (root) privileges.
-        echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf
-        ldconfig
-        #echo "Result of \$GS_LIBRARY_PATH > /etc/ld.so.conf.d/geosupport.conf after calling ldconfig:"
-        #echo "$(ldconfig -p | grep -i ${GS_LIBRARY_PATH})"
-    else
-        # Add GS_LIBRARY_PATH to the LD_LIBRARY_PATH
-        if [ -n "${ldlibpath}" ]; then
-            [[ "$LD_LIBRARY_PATH" =~ "${GS_LIBRARY_PATH}" ]] || \
-                export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GS_LIBRARY_PATH}
-            #echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
-        fi # End ldlibpath
-    fi # End ldconfig
-}
-
-#
-# Adds $GEOSUPPORT/bin to the PATH if it's not already there.
-#
-# TODO Make persistent?
-#      echo "${GEOSUPPORT_HOME}/bin" >> $HOME/.profile
-#        or
-#      echo "${GEOSUPPORT_HOME}/bin" > /etc/profile.d/geosupport.sh
-#
-_configure_path() {
-    [[ "$PATH" =~ "${GEOSUPPORT_HOME}/bin" ]] || \
-        export PATH="${GEOSUPPORT_HOME}/bin:${PATH}"
-}
-
-#
-# By default, Geosupport libs are visible to the dynamic linker by setting
-# the LD_LIBRARY_PATH environment variable.
-#
-# If the environment contains a variable named GEOSUPPORT_LDCONFIG whose
-# value is not null or an empty string, ldconfig is used instead.
-# However, the call to ldconfig must be run as root.
-#
-_install() {
-    _install_files
-    _configure_so_path
-    _configure_path
 }
 
 usage() {
@@ -121,28 +39,26 @@ Commands:
 
   help          Show this usage message and exit.
 
-  install       Install Geosupport binaries, libraries and data.
-
-                Options:
-
-                  --ldconfig    Permanently adds GS_LIBRARY_PATH to the
-                                runtime shared library path.
-
-                                NOTE: Use of this option causes '--ldlibpath'
-                                to be ignored if it also appears on the
-                                command line.
-
-                                NOTE: Requires root privileges
-
-                  --ldlibpath   Adds GS_LIBRARY_PATH to the LD_LIBRARY_PATH
-                                variable.
-
-                                NOTE: This option will be ignored if
-                                '--ldconfig' also appears on the command line.
+  install       Create soft links for Geosupport binaries and shared libs
+                under /usr/local/bin and /usr/local/lib respectively.
+                After shared libraries are symlinked, ldconfig is called
+                to update the ld cache.
 
   version       Print Geosupport release and version information.
 
 EOF
+}
+
+_createln() {
+    [[ "$#" -gt 1 ]] || die "$0: directory and 1 or more file names required.";
+    dname="$1"
+    shift
+    cd "/usr/local/${dname}"
+    for f in "$@"; do
+        echo "creating link /usr/local/${dname}/${f} -> ${GEOSUPPORT_HOME}/${dname}/${f}";
+        ln -svL  "${GEOSUPPORT_HOME}/${dname}/${f}" "${f}";
+    done;
+    cd "${this_dir}"
 }
 
 _env() {
@@ -164,8 +80,16 @@ _goat() {
     "${GEOSUPPORT_HOME}/bin/goat"
 }
 
+_install() {
+    _createln 'bin' 'geosupport'
+    local sofiles=$(ls -1 $GEOSUPPORT_HOME/lib/*.so | xargs basename -s $GEOSUPPORT_HOME | tr '\n' ' ')
+    _createln 'lib' ${sofiles[$@]}
+    ldconfig
+}
+
 _version() {
 cat <<- EOF
+# @buildtimestamp@
 
 Geosupport @geosupport_fullversion@
 -----------------------------------
@@ -181,7 +105,11 @@ Geosupport @geosupport_fullversion@
 Geosupport is written and maintained by the NYC Department of City Planning.
 https://www1.nyc.gov/site/planning/data-maps/open-data.page#geocoding_application
 
-This Geosupport distribution was generated using the geosupport-docker project
+
+@image_name@:@image_tag@
+-----------------------------------
+
+This distribution was generated using the geosupport-docker project
 by Matthew Lipper.
 https://github.com/mlipper/geosupport-docker
 https://hub.docker.com/r/mlipper/geosupport-docker
@@ -189,7 +117,6 @@ https://hub.docker.com/r/mlipper/geosupport-docker
 
 EOF
 }
-
 
 main() {
 
@@ -200,7 +127,7 @@ main() {
             -e | environment)
                 commands+=( "environment" ); shift
                 ;;
-            goat)
+            -g | goat)
                 commands+=( "goat" ); shift
                 ;;
             -h | help)
@@ -209,17 +136,8 @@ main() {
             -i | install)
                 commands+=( "install" ); shift
                 ;;
-            -p | path)
-                commands+=( "path" ); shift
-                ;;
-            -s | sopath)
-                commands+=( "sopath" ); shift
-                ;;
             -v | version)
                 commands+=( "version" ); shift
-                ;;
-            --*)
-                switches+=( "$1" ); shift
                 ;;
             *)
                 die "Invalid argument: $1"; shift
@@ -237,10 +155,6 @@ main() {
                 usage ;;
             install)
                 _install ;;
-            path)
-                _configure_path ;;
-            sopath)
-                _configure_so_path ;;
             version)
                 _version ;;
             *)

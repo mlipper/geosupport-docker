@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
-ARG VARIANT=@gsd_baseimage@
+ARG VARIANT=@baseimage@
 FROM ${VARIANT} AS builder
 
-LABEL com.digitalclash.gsd.tag=@gsd_tag@
-LABEL com.digitalclash.gsd.dist.version=@gsd_dist_version@
+LABEL com.digitalclash.gsd.image=@image_name@
+LABEL com.digitalclash.gsd.tag=@image_tag@-dist
+LABEL com.digitalclash.gsd.vcs.ref=@vcs_ref@
 LABEL com.digitalclash.gsd.geosupport.major=@geosupport_major@
 LABEL com.digitalclash.gsd.geosupport.minor=@geosupport_minor@
 LABEL com.digitalclash.gsd.geosupport.patch=@geosupport_patch@
@@ -27,9 +28,10 @@ RUN set -ex; \
         gcc -o message --static message.c; \
         rm message.c
 
-COPY @gsd_dcp_distfile@ ./geosupport.zip
+COPY @dcp_distfile@ ./geosupport.zip
 COPY geo_h.patch ./geo_h.patch
-COPY initenv.sh ./initenv
+COPY geosupport.sh ./geosupport
+COPY geosupport.version ./version
 
 ENV GEOSUPPORT_FULL_VERSION="${GEOSUPPORT_FULL_VERSION:-@geosupport_fullversion@}"
 
@@ -48,14 +50,16 @@ RUN set -eux; \
         mv "${version_dir}/include/geo.h" "${version_dir}/include/geo.h.orig"; \
         patch -i geo_h.patch -o "${version_dir}/include/geo.h" "${version_dir}/include/geo.h.orig"; \
         rm geo_h.patch; \
-# Add "initenv" script so it can be source'd for easy installation and environment setup
-        chmod +x initenv; \
-        mv initenv "${version_dir}/bin/initenv"; \
+# Add "geosupport" installation script
+        chmod +x geosupport; \
+        mv geosupport "${version_dir}/bin/geosupport"; \
+        mv version "${version_dir}/bin/version" && \
 # Create the gzipped distribution
         tar czvf "geosupport-${GEOSUPPORT_FULL_VERSION}.tgz" "${version_dir}"; \
         rm -rf "${version_dir}";
 
 FROM scratch
 COPY --from=builder /dist /dist
-VOLUME /dist
+# Don't use VOLUME to allow more flexibility for clients
+# VOLUME /dist
 CMD [ "/dist/message" ]

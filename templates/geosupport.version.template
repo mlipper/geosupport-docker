@@ -1,0 +1,7 @@
+# Built @gbuildtimestamp@
+
+geosupport_release=@geosupport_release@
+geosupport_patch=@geosupport_patch@
+geosupport_major=@geosupport_major@
+geosupport_minor=@geosupport_minor@
+ 

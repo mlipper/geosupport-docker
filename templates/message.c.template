@@ -4,8 +4,8 @@
 #ifndef GSD_INFO
     #define GSD_INFO "defined"
 	#define GSD_ARCH "Linux x86-64 (amd64)"
-    #define GSD_DCP_DISTFILE "@gsd_dcp_distfile@"
-	#define GSD_IMAGE "@gsd_tag@:@gsd_dist_version@"
+    #define GSD_DCP_DISTFILE "@dcp_distfile@"
+	#define GSD_IMAGE "@image_name@:@image_tag@-dist"
     #define GEOSUPPORT_FULLVERSION "@geosupport_fullversion@"
     #define GEOSUPPORT_MAJOR "@geosupport_major@"
     #define GEOSUPPORT_MINOR "@geosupport_minor@"

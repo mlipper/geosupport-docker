@@ -158,19 +158,30 @@ _setc() {
 #       when this function gets called.
 #
 _set_missing_props() {
+    if [[ ! -n "$(_getc buildtimestamp)" ]]; then
+        local tz="$(_getc buildtz)"
+        local timestamp="$(TZ="${tz}" date)"
+        _setc "buildtimestamp" "${timestamp}"
+    fi
     local major="$(_getc geosupport_major)"
     local release="$(_getc geosupport_release)"
     local patch="$(_getc geosupport_patch)"
     local minor="$(_getc geosupport_minor)"
     local version_prefix="${major}${release}${patch}_${major}"
     if [[ ! -n "$(_getc geosupport_fullversion)" ]]; then
-        # Uses '.' to separate major and minor version (unlike 'gsd_dcp_distfile' below)
+        # Uses '.' to separate major and minor version (unlike 'dcp_distfile' below)
         _setc "geosupport_fullversion" "${version_prefix}.${minor}"
     fi
-    if [[ ! -n "$(_getc gsd_dcp_distfile)" ]]; then
+    if [[ ! -n "$(_getc dcp_distfile)" ]]; then
         # Uses '_' to separate major and minor version (unlike 'geosupport_fullversion' above)
-        _setc "gsd_dcp_distfile" "linux_geo${version_prefix}_${minor}.zip"
+        _setc "dcp_distfile" "linux_geo${version_prefix}_${minor}.zip"
     fi
+    # Set vcs_ref if it is available
+    local vcs_ref="unknown"
+    if command -v git &> /dev/null; then
+        vcs_ref="$(git rev-parse --short HEAD)"
+    fi
+    _setc "vcs_ref" "${vcs_ref}"
 }
 
 _prepare_build_dir() {
@@ -178,38 +189,14 @@ _prepare_build_dir() {
     mkdir -p "${BUILD_DIR}"
     # Copy non-templated files to build directory
     cp geo_h.patch "${BUILD_DIR}"
-    cp "$(_getc gsd_distdir)/$(_getc gsd_dcp_distfile)" "${BUILD_DIR}"
+    cp "$(_getc distdir)/$(_getc dcp_distfile)" "${BUILD_DIR}"
 }
 
 #
-# Generates a script for invoking 'docker build' from the $BUILD_DIR.
+# Runs housekeeping tasks once build generation is complete. 
 #
-# TODO Add error handling for macos if GNU readlink isn't available.
-#
-#      # Better:
-#      Error: GNU readlink required. Install coreutils with brew and
-#      see 'Caveats' message to place gnubin first on the PATH.
-#        or
-#      # Worse:
-#      if [[ \$(uname) =~ Darwin ]]; then
-#        cd "\$(dirname "\$(greadlink -f "\$BASH_SOURCE")")"
-#      else
-#        cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
-#      fi
-#
-_gen_build_script() {
-    local scriptf="${BUILD_DIR}/build-image.sh"
-    cat <<- EOF > "${scriptf}"
-#!/usr/bin/env bash
-
-set -Eeuo pipefail
-
-cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
-
-docker build -t "$(_getc gsd_tag):$(_getc gsd_dist_version)"  -f Dockerfile.dist .
-docker build -t "$(_getc gsd_tag):$(_getc gsd_version)"  -f Dockerfile .
-
-EOF
+_post_generate() {
+    local scriptf="${BUILD_DIR}/build.sh"
     chmod +x "${scriptf}"
     echo "$(basename "${scriptf}")" > "${BUILD_DIR}/.dockerignore"
 }
@@ -226,7 +213,7 @@ generate() {
         sed -f "${sedf}" <"${tplf}" >"${BUILD_DIR}/$(basename ${tplf%%.template})"
     done
     rm "${sedf}"
-    _gen_build_script
+    _post_generate
     log "GENERATE" "Source file generation complete."
 }
 
@@ -311,7 +298,7 @@ main() {
     # Default optional properties not given at the commandline
     _set_missing_props
 
-    BUILD_DIR="$(_getc gsd_builddir)"
+    BUILD_DIR="$(_getc builddir)"
 
     for action in "${actions[@]}"; do
         case "${action}" in
