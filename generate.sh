@@ -203,24 +203,8 @@ _prepare_build_dir() {
 #        cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
 #      fi
 #
-_gen_build_script() {
-    local scriptf="${BUILD_DIR}/build-image.sh"
-    cat <<- EOF > "${scriptf}"
-#!/usr/bin/env bash
-
-set -Eeuo pipefail
-
-cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
-
-docker build -t "$(_getc gsd_tag):$(_getc gsd_dist_version)"  -f Dockerfile.dist .
-docker build -t "$(_getc gsd_tag):$(_getc gsd_version)"  -f Dockerfile .
-EOF
-    chmod +x "${scriptf}"
-    echo "$(basename "${scriptf}")" >> "${BUILD_DIR}/.dockerignore"
-}
-
-_gen_vol_script() {
-    local scriptf="${BUILD_DIR}/createvols.sh"
+_gen_docker_script() {
+    local scriptf="${BUILD_DIR}/docker.sh"
     cat <<- EOF > "${scriptf}"
 #!/usr/bin/env bash
 
@@ -230,14 +214,34 @@ cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
 
 FULLVER="$(_getc geosupport_fullversion)"
 
-docker volume create "geosupport-dist-\${FULLVER}"
-docker run --rm --mount "source=geosupport-dist-\${FULLVER},target=/dist"  "$(_getc gsd_tag):$(_getc gsd_dist_version)" /bin/true
+buildDistImage() {
+    docker build -t "$(_getc gsd_tag):$(_getc gsd_dist_version)"  -f Dockerfile.dist .
+}
 
-docker volume create "geosupport-\${FULLVER}"
-docker run --rm --mount "source=geosupport-\${FULLVER},target=$(_getc geosupport_basedir)"  "$(_getc gsd_tag):$(_getc gsd_version)" /bin/true
+buildImage() {
+    docker build -t "$(_getc gsd_tag):$(_getc gsd_version)"  -f Dockerfile .
+}
+
+createDistVol() {
+    docker volume create "geosupport-dist-\${FULLVER}"
+    docker run --rm --mount "source=geosupport-dist-\${FULLVER},target=/dist"  "$(_getc gsd_tag):$(_getc gsd_dist_version)"
+}
+
+createVol() {
+    docker volume create "geosupport-\${FULLVER}"
+    docker run --rm --mount "source=geosupport-\${FULLVER},target=$(_getc geosupport_basedir)"  "$(_getc gsd_tag):$(_getc gsd_version)" /bin/true
+}
+
+removeDistVol() {
+    docker volume rm "geosupport-dist-\${FULLVER}"
+}
+
+removeVol() {
+    docker volume rm "geosupport-\${FULLVER}"
+}
 EOF
     chmod +x "${scriptf}"
-    echo "$(basename "${scriptf}")" >> "${BUILD_DIR}/.dockerignore"
+    echo "$(basename "${scriptf}")" > "${BUILD_DIR}/.dockerignore"
 }
 
 generate() {
@@ -252,8 +256,7 @@ generate() {
         sed -f "${sedf}" <"${tplf}" >"${BUILD_DIR}/$(basename ${tplf%%.template})"
     done
     rm "${sedf}"
-    _gen_build_script
-    _gen_vol_script
+    _gen_docker_script
     log "GENERATE" "Source file generation complete."
 }
 

@@ -2,14 +2,18 @@
 
 set -Eeuo pipefail
 
-cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
+this_dir="$(dirname "$(readlink -vf "$BASH_SOURCE")")"
+this_file="$(basename "$0")"
+
+cd "${this_dir}"
 
 #
 # Globals
 #
 
-commands=()
-switches=()
+declare -a commands
+declare -a switches
+declare -A props
 
 #
 # Environment
@@ -36,13 +40,26 @@ _install_files() {
     mkdir -p ${GEOSUPPORT_BASEDIR} \
         && cd ${GEOSUPPORT_BASEDIR} \
         && tar xzvf ${GEOSUPPORT_DISTFILE} \
-        && ln -s ${GEOSUPPORT_FULL_VERSION} ${GEOSUPPORT_HOME}
+        && ln -svL ${GEOSUPPORT_FULL_VERSION} ${GEOSUPPORT_HOME}
     cd "${cdir}"
 }
 
 #
 # Configures how the Geosupport shared library files are located by ld
-# at runtime using the 'switches' global variable.
+# at runtime.
+#
+# By default, Geosupport libs are visible to the dynamic linker by
+# symlinking all $GEOSUPPORT_HOME/lib/*.so files into /usr/local/lib
+# and running ldconfig.
+# 
+# There are two other, mutually exclusive options to achieve the
+# same goal. Source this file with one of the following flags:
+#
+#   --ldlibpath    The LD_LIBRARY_PATH environment variable will
+#                  set/updated with $GEOSUPPORT_HOME/lib
+#
+#   --ldconfig     Creates file /etc/ld.so.conf.d/geosupport.conf
+#                  containing the expanded value of $GEOSUPPORT_HOME/lib
 #
 _configure_so_path() {
     local ldconfig=
@@ -91,17 +108,69 @@ _configure_path() {
 }
 
 #
-# By default, Geosupport libs are visible to the dynamic linker by setting
-# the LD_LIBRARY_PATH environment variable.
+# This function does three things:
 #
-# If the environment contains a variable named GEOSUPPORT_LDCONFIG whose
-# value is not null or an empty string, ldconfig is used instead.
-# However, the call to ldconfig must be run as root.
+# 1. Unpack the Geosupport distribution using the givem version
+#    information.
+#
+# 2. Register Geosupport's shared libraries with the dynamic linker
+#    so that they may be loaded at runtime.
+#
+# 3. Add the directory containing this script to system path.
+#
+# Task 1 is implemented by function _install_files.
+# Task 2 is implemented by function _configure_so_path.
+# Task 3 is implemented by function _configure_path.
+#
+# See the comments of each function for information on defaults and
+# options.
 #
 _install() {
+    [[ "$#" -eq 1 ]] || die "createln: 1 directory name argument required, $# given";
     _install_files
     _configure_so_path
     _configure_path
+}
+
+_createln() {
+    [[ "$#" -eq 1 ]] || die "_createln: 1 directory name argument required, $# given";
+    dname="$1"
+    cd "${GEOSUPPORT_HOME}/${dname}";
+    for f in *.so; do
+        ln -svL "$PWD/$f" "/usr/local/${dname}/$f";
+    done;
+}
+
+_removeln() {
+    [ "$#" -eq 1 ] || die "_removeln: 1 directory name argument required, $# given";
+    dname="$1"
+    cd "${GEOSUPPORT_HOME}/${dname}";
+    for f in *.so; do
+        rm "/usr/local/${dname}/$f";
+    done;
+}
+
+#
+# Write and eval the geosupport.env file
+#
+# Switches:
+#   --release
+#   --patch
+#   --major
+#   --minor
+#
+_setenv() {
+    local envf="${this_dir}/geosupport.env"
+    rm -f "${envf}"
+    tee "${envf}" <<-EOS
+export GEOSUPPORT_FULL_VERSION="@geosupport_fullversion@"
+export GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-@geosupport_basedir@}"
+export GEOSUPPORT_HOME="${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
+export GEOFILES="${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
+export GS_LIBRARY_PATH="${GS_LIBRARY_PATH:-${GEOSUPPORT_HOME}/lib}"
+export GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
+
+EOS
 }
 
 usage() {

@@ -1,0 +1,5 @@
+ release=@geosupport_release@
+ patch=@geosupport_patch@
+ major=@geosupport_major@
+ minor=@geosupport_minor@
+ 
