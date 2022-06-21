@@ -34,34 +34,32 @@ Usage: ${this_file} [COMMAND [OPTIONS]]
 Run, install or show information about Geosupport
 
 Commands:
-  build           Builds @gsd_tag@:@gsd_version@. Note: if
-                  @gsd_tag@:@gsd_dist_version@ has not been
+  build           Builds geosupport-docker:latest. Note: if
+                  geosupport-docker:latest-dist has not been
                   built this command will fail.
 
-  buildall        First builds @gsd_tag@:@gsd_dist_version@,
-                  then builds @gsd_tag@:@gsd_version@.
+  buildall        First builds geosupport-docker:latest-dist,
+                  then builds geosupport-docker:latest.
 
-  builddist       Builds @gsd_tag@:@gsd_dist_version@.
+  builddist       Builds geosupport-docker:latest-dist.
 
-  createdistvol   Creates a named volume
-                  'geosupport-dist-@geosupport_fullversion@'
+  createdistvol   Creates a named volume 'geosupport-dist-22a2_22.11'
                   from the /dist directory in the
-                  @gsd_tag@:@gsd_dist_version@ image.
+                  geosupport-docker:latest-dist image.
 
-  createvol       Creates a named volume
-                  'geosupport-@geosupport_fullversion@'
-                  from the $GEOSUPPORT_HOME directory in the
-                  @gsd_tag@:@gsd_version@ image.
+  createvol       Creates a named volume 'geosupport-22a2_22.11'
+                  from the \$GEOSUPPORT_HOME directory in the
+                  geosupport-docker:latest image.
 
-  help          Show this usage message and exit.
+  help            Show this usage message and exit.
 
-  removedistvol Deletes volume 'geosupport-dist-@geosupport_fullversion@'
-                if it exists.
+  removedistvol   Deletes volume 'geosupport-dist-22a2_22.11'
+                  if it exists.
 
-  removevol     Deletes volume 'geosupport-@geosupport_fullversion@'
-                if it exists.
+  removevol       Deletes volume 'geosupport-22a2_22.11'
+                  if it exists.
 
-  release       TBD
+  release         TBD
 
 EOF
 }
@@ -112,6 +110,9 @@ main() {
                 ;;
             createvol)
                 actions+=( "createVol" ); shift
+                ;;
+            help)
+                actions+=( "usage" ); shift
                 ;;
             removedistvol)
                 actions+=( "removeDistVol" ); shift
