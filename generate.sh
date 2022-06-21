@@ -158,6 +158,11 @@ _setc() {
 #       when this function gets called.
 #
 _set_missing_props() {
+    if [[ ! -n "$(_getc gsd_buildtimestamp)" ]]; then
+        local tz="$(_getc gsd_buildtz)"
+        local timestamp="$(TZ="${tz}" date)"
+        _setc "gsd_buildtimestamp" "${timestamp}"
+    fi
     local major="$(_getc geosupport_major)"
     local release="$(_getc geosupport_release)"
     local patch="$(_getc geosupport_patch)"
@@ -239,6 +244,8 @@ removeDistVol() {
 removeVol() {
     docker volume rm "geosupport-\${FULLVER}"
 }
+
+buildDistImage && buildImage
 EOF
     chmod +x "${scriptf}"
     echo "$(basename "${scriptf}")" > "${BUILD_DIR}/.dockerignore"

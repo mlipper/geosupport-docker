@@ -1,5 +1,7 @@
- release=@geosupport_release@
- patch=@geosupport_patch@
- major=@geosupport_major@
- minor=@geosupport_minor@
+# Built @gsd_buildtimestamp@
+
+geosupport_release=@geosupport_release@
+geosupport_patch=@geosupport_patch@
+geosupport_major=@geosupport_major@
+geosupport_minor=@geosupport_minor@
  

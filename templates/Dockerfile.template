@@ -29,9 +29,6 @@ RUN set -eux; \
         tar xzvf /geosupport.tgz; \
         ln -s "version-${GEOSUPPORT_FULL_VERSION}" "${GEOSUPPORT_HOME}"; \
         rm /geosupport.tgz; \
-# Shared library configuration requires root!
-        echo "${GS_LIBRARY_PATH}" > /etc/ld.so.conf.d/geosupport.conf; \
-        ldconfig;
+        "${GEOSUPPORT_HOME}/bin/geosupport" install
 
-# CMD ["/bin/bash", "-c", "source ${GEOSUPPORT_HOME}/bin/initenv ldconfig"]
-CMD ["goat"]
+CMD ["geosupport", "-v"]

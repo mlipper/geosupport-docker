@@ -20,12 +20,18 @@ COPY --from=geosupport-docker:latest-dist /dist/geosupport-${GEOSUPPORT_FULL_VER
 
 ## Dockerfile
 
-Provides a fully functional Geosupport installation which, by default, is built from othe parent image `debian:bullseye-slim`. This `Dockerfile` unpacks, installs and configures Geosupport.
+Provides a fully functional Geosupport installation which, by default, is built from image `debian:bullseye-slim`. This `Dockerfile` unpacks, installs and configures Geosupport.
 
-The default `CMD` runs DCP's command line application for making interactive Geosupport calls.
+The default `CMD` simply prints Geosupport and geosupport-docker version information.
 
 ```sh
 $ docker run -it --rm geosupport-docker:latest
+```
+
+To run DCP's CLI application for interacting with Geosupport from the command line, use the following:
+
+```sh
+$ docker run -it --rm geosupport-docker:latest geosupport goat
 
 
 ------------------------------------------------------------------------------------------
@@ -56,21 +62,6 @@ lrwxrwxrwx 1 root root   18 Jun 13 18:20 current -> version-22a2_22.11
 drwxr-xr-x 6 root root 4096 Jun 13 18:55 version-22a2_22.11
 ```
 
-Remember to set the necessary environment variables and to make sure the dynamic linker can find the Geosupport shared libraries at runtime before using Geosupport.
-This can be done, for example, by sourcing the `$GEOSUPPORT_HOME/bin/initenv` file which takes one required argument: either `ldconfig` or `ldlibpath`.
-
-```sh
-# Requires root because it uses the ldconfig command
-. /opt/geosupport/current/bin/initenv ldconfig
-```
-
-Or
-
-```sh
-# Does not require root because it sets/updates the LD_LIBRARY_PATH
-. /opt/geosupport/current/bin/initenv ldlibpath
-```
-
 ## About Geosupport
 
 Geosupport is the City of New York's official geocoder of record. The Geosupport application (for Linux, Windows and z/OS) is written and maintained by the New York City [Department of City Planning](http://www1.nyc.gov/site/planning/index.page).
@@ -79,7 +70,7 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 
 The latest news about this project.
 
-#### June 16th, 2022
+#### June 22nd, 2022
 
 * **Version 2.0.0 available.** This release wraps `Geosupport 22a2_22.11`.
 

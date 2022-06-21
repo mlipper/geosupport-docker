@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+this_dir="$(dirname "$(readlink -vf "$BASH_SOURCE")")"
+this_file="$(basename "$0")"
+
+cd "${this_dir}"
+
+#
+# Globals
+#
+
+declare -a commands
+
+FULLVER="@geosupport_fullversion@"
+
+#
+# Functions
+#
+
+die() {
+    echo "$*" 1>&2
+    exit 1
+}
+
+usage() {
+    local this_file
+    this_file="$(basename "${BASH_SOURCE[0]}")"
+cat <<- EOF
+
+Usage: ${this_file} [COMMAND [OPTIONS]]
+
+Run, install or show information about Geosupport
+
+Commands:
+  build           Builds @gsd_tag@:@gsd_version@. Note: if
+                  @gsd_tag@:@gsd_dist_version@ has not been
+                  built this command will fail.
+
+  buildall        First builds @gsd_tag@:@gsd_dist_version@,
+                  then builds @gsd_tag@:@gsd_version@.
+
+  builddist       Builds @gsd_tag@:@gsd_dist_version@.
+
+  createdistvol   Creates a named volume
+                  'geosupport-dist-@geosupport_fullversion@'
+                  from the /dist directory in the
+                  @gsd_tag@:@gsd_dist_version@ image.
+
+  createvol       Creates a named volume
+                  'geosupport-@geosupport_fullversion@'
+                  from the $GEOSUPPORT_HOME directory in the
+                  @gsd_tag@:@gsd_version@ image.
+
+  help          Show this usage message and exit.
+
+  removedistvol Deletes volume 'geosupport-dist-@geosupport_fullversion@'
+                if it exists.
+
+  removevol     Deletes volume 'geosupport-@geosupport_fullversion@'
+                if it exists.
+
+  release       TBD
+
+EOF
+}
+
+buildDistImage() {
+    docker build -t "@gsd_tag@:@gsd_dist_version@"  -f Dockerfile.dist .
+}
+
+buildImage() {
+    docker build -t "@gsd_tag@:@gsd_version@"  -f Dockerfile .
+}
+
+createDistVol() {
+    docker volume create "geosupport-dist-${FULLVER}"
+    docker run --rm --mount "source=geosupport-dist-${FULLVER},target=/dist"  "@gsd_tag@:@gsd_dist_version@"
+}
+
+createVol() {
+    docker volume create "geosupport-${FULLVER}"
+    docker run --rm --mount "source=geosupport-${FULLVER},target=@geosupport_basedir@"  "@gsd_tag@:@gsd_version@" /bin/true
+}
+
+removeDistVol() {
+    docker volume rm "geosupport-dist-${FULLVER}"
+}
+
+removeVol() {
+    docker volume rm "geosupport-${FULLVER}"
+}
+
+main() {
+
+    [ $# -eq 0 ] && usage
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            build)
+                actions+=( "buildImage" ); shift
+                ;;
+            buildall)
+                actions+=( "buildAll" ); shift
+                ;;
+            builddist)
+                actions+=( "buildDistImage" ); shift
+                ;;
+            createdistvol)
+                actions+=( "createDistVol" ); shift
+                ;;
+            createvol)
+                actions+=( "createVol" ); shift
+                ;;
+            removedistvol)
+                actions+=( "removeDistVol" ); shift
+                ;;
+            removevol)
+                actions+=( "removeVol" ); shift
+                ;;
+            "")
+                die "Missing command"; shift
+                ;;
+            *)
+                die "Invalid command: $1"; shift
+                ;;
+        esac
+    done
+
+    for action in "${actions[@]}"; do
+        eval "${action}"
+    done
+} # End main
+
+main "$@"
