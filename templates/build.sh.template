@@ -12,7 +12,11 @@ cd "${this_dir}"
 #
 
 declare -a commands
+declare -a registries
+declare -a variants
 
+DEFAULT_REPOSITORY=local
+DEFAULT_VARIANT=default
 FULLVER="@geosupport_fullversion@"
 
 #
@@ -29,65 +33,125 @@ usage() {
     this_file="$(basename "${BASH_SOURCE[0]}")"
 cat <<- EOF
 
-Usage: ${this_file} [COMMAND [OPTIONS]]
+Usage: ${this_file} COMMAND [OPTIONS]
 
-Run, install or show information about Geosupport
+Build or remove @image_name@ v@image_tag@ images.
+Create or remove @image_name@ v@image_tag@ volumes.
 
 Commands:
-  build           Builds geosupport-docker:latest. Note: if
-                  geosupport-docker:latest-dist has not been
-                  built this command will fail.
+  build         Builds @image_name@ v@image_tag@ to the local
+                registry using the following template:
 
-  buildall        First builds geosupport-docker:latest-dist,
-                  then builds geosupport-docker:latest.
+                [<repository>/]@image_name@:@image_version@[-<variant>]
 
-  builddist       Builds geosupport-docker:latest-dist.
+        NOTES:
+                The --variant=default option is a special case in
+                which the template will be:
 
-  createdistvol   Creates a named volume 'geosupport-dist-22a2_22.11'
-                  from the /dist directory in the
-                  geosupport-docker:latest-dist image.
+                [<repository>/]@image_name@:@image_version@
 
-  createvol       Creates a named volume 'geosupport-22a2_22.11'
-                  from the \$GEOSUPPORT_HOME directory in the
-                  geosupport-docker:latest image.
+                Builds are always done against the local repository.
+                If the --repository option is not specified, the
+                image will be built as described above except the template
+                will not include a '<repository>/' prefix.
 
-  help            Show this usage message and exit.
+  createvol     Creates one or more named volumes whose names and
+                container directories are determined by the specified
+                --variants option. 
 
-  removedistvol   Deletes volume 'geosupport-dist-22a2_22.11'
-                  if it exists.
+  help          Show this usage message and exit.
 
-  removevol       Deletes volume 'geosupport-22a2_22.11'
-                  if it exists.
+  removevol     Deletes one or more named volumes whose names are
+                determined by the specified --variants option.
 
-  release         TBD
+Options:
+  --variant     Image variant to build. This option can be specified
+                multiple times and order is important: see the DEPENDENCIES
+                note below.
+
+                The following variants are supported:
+
+                dist
+                       image name: @image_name@:@image_version@-dist
+                      volume name: geosupport-dist-@geosupport_fullversion@
+                    volume source: /dist
+
+                default
+                       image name: @image_name@:@image_version@-dist
+                      volume name: geosupport-dist-@geosupport_fullversion@
+                    volume source: \$GEOSUPPORT_HOME
+
+            DEPENDENCIES:
+                Building the default variant requires that the dist variant
+                be available from the local repository. If dist is not available
+                already, use the following when building the variant:
+
+                ${this_file} --variant=dist --variant=default 
+
+  --repository  Repository prefix to use. If not specified, local is assumed.
 
 EOF
 }
 
-buildDistImage() {
-    docker build -t "@gsd_tag@:@gsd_dist_version@"  -f Dockerfile.dist .
+#
+# $1 repository prefix
+# $2 image
+# $3 tag
+#
+_imageString() {
+    local prefix="$(_fixPrefix $1)"
+    local image="$2"
+    local tag="$3"
+    echo -n "${prefix}${image}:${tag}"
 }
 
+#
+# $1 repository prefix
+#
+_fixPrefix() {
+    local prefix="$1"
+    if [[ "${prefix}" == "${DEFAULT_REPOSITORY}" ]]; then
+        prefix=""
+    else
+        prefix="${prefix}/"
+    echo -n "${prefix}"
+}
+
+#
+# $1 image string
+# $2 file (defaults to Dockerfile)
+#
 buildImage() {
-    docker build -t "@gsd_tag@:@gsd_version@"  -f Dockerfile .
+    local image_string="$1"
+    local file="${2:Dockerfile}"
+    docker build -t "${image_string}"  -f "${file}" .
 }
 
-createDistVol() {
-    docker volume create "geosupport-dist-${FULLVER}"
-    docker run --rm --mount "source=geosupport-dist-${FULLVER},target=/dist"  "@gsd_tag@:@gsd_dist_version@"
-}
-
+#
+# $1 name
+# $2 target
+# $3 image string
+# $4 command
+#
 createVol() {
-    docker volume create "geosupport-${FULLVER}"
-    docker run --rm --mount "source=geosupport-${FULLVER},target=@geosupport_basedir@"  "@gsd_tag@:@gsd_version@" /bin/true
+    local name="$1"
+    local target="$2"
+    local image_string="$3"
+    local command="$4"
+    docker volume create "${name}"
+    if [[ -n "${command}" ]]; then
+        docker run --rm --mount "source=${name},target=${target}"  "${image_string}"
+    else
+        docker run --rm --mount "source=${name},target=${target}"  "${image_string}" "${command}"
+    fi
 }
 
-removeDistVol() {
-    docker volume rm "geosupport-dist-${FULLVER}"
-}
-
+#
+# $1 name
+#
 removeVol() {
-    docker volume rm "geosupport-${FULLVER}"
+    local name="$1"
+    docker volume rm "${name}"
 }
 
 main() {
@@ -99,29 +163,26 @@ main() {
             build)
                 actions+=( "buildImage" ); shift
                 ;;
-            buildall)
-                actions+=( "buildAll" ); shift
-                ;;
-            builddist)
-                actions+=( "buildDistImage" ); shift
-                ;;
-            createdistvol)
-                actions+=( "createDistVol" ); shift
-                ;;
             createvol)
                 actions+=( "createVol" ); shift
                 ;;
             help)
                 actions+=( "usage" ); shift
                 ;;
-            removedistvol)
-                actions+=( "removeDistVol" ); shift
-                ;;
             removevol)
                 actions+=( "removeVol" ); shift
                 ;;
+            --variant=*)
+                variants+=( "${1##--variant=}" ); shift
+                ;;
+            --repository=*)
+                registries+=( "${1##--repository=}" ); shift
+                ;;
             "")
                 die "Missing command"; shift
+                ;;
+            --*)
+                die "Invalid option: $1"; shift
                 ;;
             *)
                 die "Invalid command: $1"; shift

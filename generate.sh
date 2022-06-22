@@ -220,21 +220,21 @@ cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
 FULLVER="$(_getc geosupport_fullversion)"
 
 buildDistImage() {
-    docker build -t "$(_getc gsd_tag):$(_getc gsd_dist_version)"  -f Dockerfile.dist .
+    docker build -t "$(_getc image_name):$(_getc gsd_dist_version)"  -f Dockerfile.dist .
 }
 
 buildImage() {
-    docker build -t "$(_getc gsd_tag):$(_getc gsd_version)"  -f Dockerfile .
+    docker build -t "$(_getc image_name):$(_getc gsd_version)"  -f Dockerfile .
 }
 
 createDistVol() {
     docker volume create "geosupport-dist-\${FULLVER}"
-    docker run --rm --mount "source=geosupport-dist-\${FULLVER},target=/dist"  "$(_getc gsd_tag):$(_getc gsd_dist_version)"
+    docker run --rm --mount "source=geosupport-dist-\${FULLVER},target=/dist"  "$(_getc image_name):$(_getc gsd_dist_version)"
 }
 
 createVol() {
     docker volume create "geosupport-\${FULLVER}"
-    docker run --rm --mount "source=geosupport-\${FULLVER},target=$(_getc geosupport_basedir)"  "$(_getc gsd_tag):$(_getc gsd_version)" /bin/true
+    docker run --rm --mount "source=geosupport-\${FULLVER},target=$(_getc geosupport_basedir)"  "$(_getc image_name):$(_getc gsd_version)" /bin/true
 }
 
 removeDistVol() {
