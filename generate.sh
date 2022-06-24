@@ -193,60 +193,10 @@ _prepare_build_dir() {
 }
 
 #
-# Generates a script for invoking 'docker build' from the $BUILD_DIR.
+# Runs housekeeping tasks once build generation is complete. 
 #
-# TODO Add error handling for macos if GNU readlink isn't available.
-#
-#      # Better:
-#      Error: GNU readlink required. Install coreutils with brew and
-#      see 'Caveats' message to place gnubin first on the PATH.
-#        or
-#      # Worse:
-#      if [[ \$(uname) =~ Darwin ]]; then
-#        cd "\$(dirname "\$(greadlink -f "\$BASH_SOURCE")")"
-#      else
-#        cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
-#      fi
-#
-_gen_docker_script() {
-    local scriptf="${BUILD_DIR}/docker.sh"
-    cat <<- EOF > "${scriptf}"
-#!/usr/bin/env bash
-
-set -Eeuo pipefail
-
-cd "\$(dirname "\$(readlink -f "\$BASH_SOURCE")")"
-
-FULLVER="$(_getc geosupport_fullversion)"
-
-buildDistImage() {
-    docker build -t "$(_getc image_name):$(_getc gsd_dist_version)"  -f Dockerfile.dist .
-}
-
-buildImage() {
-    docker build -t "$(_getc image_name):$(_getc gsd_version)"  -f Dockerfile .
-}
-
-createDistVol() {
-    docker volume create "geosupport-dist-\${FULLVER}"
-    docker run --rm --mount "source=geosupport-dist-\${FULLVER},target=/dist"  "$(_getc image_name):$(_getc gsd_dist_version)"
-}
-
-createVol() {
-    docker volume create "geosupport-\${FULLVER}"
-    docker run --rm --mount "source=geosupport-\${FULLVER},target=$(_getc geosupport_basedir)"  "$(_getc image_name):$(_getc gsd_version)" /bin/true
-}
-
-removeDistVol() {
-    docker volume rm "geosupport-dist-\${FULLVER}"
-}
-
-removeVol() {
-    docker volume rm "geosupport-\${FULLVER}"
-}
-
-buildDistImage && buildImage
-EOF
+_post_generate() {
+    local scriptf="${BUILD_DIR}/build.sh"
     chmod +x "${scriptf}"
     echo "$(basename "${scriptf}")" > "${BUILD_DIR}/.dockerignore"
 }
@@ -263,7 +213,7 @@ generate() {
         sed -f "${sedf}" <"${tplf}" >"${BUILD_DIR}/$(basename ${tplf%%.template})"
     done
     rm "${sedf}"
-    _gen_docker_script
+    _post_generate
     log "GENERATE" "Source file generation complete."
 }
 

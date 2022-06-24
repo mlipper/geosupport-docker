@@ -20,7 +20,7 @@ ENV PATH="${GEOSUPPORT_HOME}/bin:$PATH"
 
 ENV LANG C.UTF-8
 
-COPY --from=geosupport-docker:@gsd_version@-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
+COPY --from=@image_name@:@image_tag@-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
 
 WORKDIR "${GEOSUPPORT_BASEDIR}"
 

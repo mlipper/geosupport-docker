@@ -11,13 +11,16 @@ cd "${this_dir}"
 # Globals
 #
 
-declare -a commands
-declare -a registries
-declare -a variants
+declare -a actions=()
+declare -a repositories=()
+declare -a variants=()
 
 DEFAULT_REPOSITORY=local
 DEFAULT_VARIANT=default
+DIST_VARIANT=dist
 FULLVER="@geosupport_fullversion@"
+IMAGE_NAME="@image_name@"
+IMAGE_TAG="@image_tag@"
 
 #
 # Functions
@@ -39,16 +42,18 @@ Build or remove @image_name@ v@image_tag@ images.
 Create or remove @image_name@ v@image_tag@ volumes.
 
 Commands:
+
   build         Builds @image_name@ v@image_tag@ to the local
                 registry using the following template:
 
-                [<repository>/]@image_name@:@image_version@[-<variant>]
+                [<repository>/]@image_name@:@image_tag@[-<variant>]
 
-        NOTES:
+            NOTES:
+
                 The --variant=default option is a special case in
                 which the template will be:
 
-                [<repository>/]@image_name@:@image_version@
+                [<repository>/]@image_name@:@image_tag@
 
                 Builds are always done against the local repository.
                 If the --repository option is not specified, the
@@ -65,6 +70,7 @@ Commands:
                 determined by the specified --variants option.
 
 Options:
+
   --variant     Image variant to build. This option can be specified
                 multiple times and order is important: see the DEPENDENCIES
                 note below.
@@ -72,16 +78,19 @@ Options:
                 The following variants are supported:
 
                 dist
-                       image name: @image_name@:@image_version@-dist
+                       image name: @image_name@:@image_tag@-dist
                       volume name: geosupport-dist-@geosupport_fullversion@
                     volume source: /dist
 
                 default
-                       image name: @image_name@:@image_version@-dist
+                       image name: @image_name@:@image_tag@
                       volume name: geosupport-dist-@geosupport_fullversion@
                     volume source: \$GEOSUPPORT_HOME
+                
+                If this option is not given, all variants are built.
 
             DEPENDENCIES:
+
                 Building the default variant requires that the dist variant
                 be available from the local repository. If dist is not available
                 already, use the following when building the variant:
@@ -97,12 +106,14 @@ EOF
 # $1 repository prefix
 # $2 image
 # $3 tag
+# $4 variant
 #
 _imageString() {
     local prefix="$(_fixPrefix $1)"
     local image="$2"
     local tag="$3"
-    echo -n "${prefix}${image}:${tag}"
+    local variant="$(_fixVariant $4)"
+    echo -n "${prefix}${image}:${tag}${variant}"
 }
 
 #
@@ -114,16 +125,30 @@ _fixPrefix() {
         prefix=""
     else
         prefix="${prefix}/"
+    fi
     echo -n "${prefix}"
 }
 
 #
+# $1 variant name
+#
+_fixVariant() {
+    local variant="$1"
+    if [[ "${variant}" == "${DEFAULT_VARIANT}" ]]; then
+        variant=""
+    else
+        variant="-${variant}"
+    fi
+    echo -n "${variant}"
+}
+
+#
 # $1 image string
-# $2 file (defaults to Dockerfile)
+# $2 Dockerfile file
 #
 buildImage() {
     local image_string="$1"
-    local file="${2:Dockerfile}"
+    local file="$2"
     docker build -t "${image_string}"  -f "${file}" .
 }
 
@@ -139,7 +164,7 @@ createVol() {
     local image_string="$3"
     local command="$4"
     docker volume create "${name}"
-    if [[ -n "${command}" ]]; then
+    if [[ -z "${command}" ]]; then
         docker run --rm --mount "source=${name},target=${target}"  "${image_string}"
     else
         docker run --rm --mount "source=${name},target=${target}"  "${image_string}" "${command}"
@@ -154,29 +179,42 @@ removeVol() {
     docker volume rm "${name}"
 }
 
+#
+# $1 source image
+# $2 tag
+#
+tagImage() {
+    local source_image="$1"
+    local tag="$2"
+    docker tag "${source_image}" "${tag}"
+}
+
 main() {
 
-    [ $# -eq 0 ] && usage
+    if [ $# -eq 0 ]; then
+        usage
+        exit 0
+    fi
 
     while [ $# -gt 0 ]; do
         case "$1" in
             build)
-                actions+=( "buildImage" ); shift
+                actions+=( "build" ); shift
                 ;;
             createvol)
-                actions+=( "createVol" ); shift
+                actions+=( "createvol" ); shift
                 ;;
             help)
                 actions+=( "usage" ); shift
                 ;;
             removevol)
-                actions+=( "removeVol" ); shift
+                actions+=( "removevol" ); shift
                 ;;
             --variant=*)
                 variants+=( "${1##--variant=}" ); shift
                 ;;
             --repository=*)
-                registries+=( "${1##--repository=}" ); shift
+                repositories+=( "${1##--repository=}" ); shift
                 ;;
             "")
                 die "Missing command"; shift
@@ -190,8 +228,53 @@ main() {
         esac
     done
 
+    if [[ "${#variants[@]}" == 0 ]]; then
+        variants=( "${DIST_VARIANT}" "${DEFAULT_VARIANT}" )
+    fi
+
+    if [[ "${#repositories[@]}" == 0 ]]; then
+        repositories=( "${DEFAULT_REPOSITORY}" )
+    fi
+
     for action in "${actions[@]}"; do
-        eval "${action}"
+        for repo in "${repositories[@]}"; do
+            for variant in "${variants[@]}"; do
+                local image="$(_imageString $repo $IMAGE_NAME $IMAGE_TAG $variant)"
+                local image_latest="$(_imageString $repo $IMAGE_NAME "latest" $variant)"
+                local file="Dockerfile"
+                local name="geosupport-${FULLVER}"
+                local command="/bin/true"
+                # TODO Set mountpoint dynamically using $GEOSUPPORT_HOME
+                local target="@geosupport_basedir@/current"
+                if [[ ! "${variant}" == "${DEFAULT_VARIANT}" ]]; then
+                    file="Dockerfile.${variant}"
+                    name="geosupport-${variant}-${FULLVER}"
+                    command=
+                    if [[ "${variant}" == "${DIST_VARIANT}" ]]; then
+                        target="/dist"
+                    fi
+                fi
+                local volname="geosupport${name}-${FULLVER}"
+                case "$action" in
+                    build)
+                        buildImage "${image}" "${file}"
+                        tagImage "${image}" "${image_latest}"
+                        ;;
+                    createvol)
+                        createVol "${name}" "${target}" "${image}" "${command}"
+                        ;;
+                    removevol)
+                        removeVol "${name}"
+                        ;;
+                    usage)
+                        usage
+                        ;;
+                    *)
+                        die "Invalid action: $action";
+                        ;;
+                esac
+            done
+        done
     done
 } # End main
 

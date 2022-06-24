@@ -106,8 +106,8 @@ Geosupport is written and maintained by the NYC Department of City Planning.
 https://www1.nyc.gov/site/planning/data-maps/open-data.page#geocoding_application
 
 
-geosupport-docker @gsd_version@
--------------------------------
+@image_name@:@image_tag@
+-----------------------------------
 
 This Geosupport distribution was generated using the geosupport-docker project
 by Matthew Lipper.
