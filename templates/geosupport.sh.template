@@ -89,7 +89,7 @@ _install() {
 
 _version() {
 cat <<- EOF
-# @gsd_buildtimestamp@
+# @buildtimestamp@
 
 Geosupport @geosupport_fullversion@
 -----------------------------------
@@ -109,7 +109,7 @@ https://www1.nyc.gov/site/planning/data-maps/open-data.page#geocoding_applicatio
 @image_name@:@image_tag@
 -----------------------------------
 
-This Geosupport distribution was generated using the geosupport-docker project
+This distribution was generated using the geosupport-docker project
 by Matthew Lipper.
 https://github.com/mlipper/geosupport-docker
 https://hub.docker.com/r/mlipper/geosupport-docker

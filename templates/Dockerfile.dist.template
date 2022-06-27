@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG VARIANT=@gsd_baseimage@
+ARG VARIANT=@baseimage@
 FROM ${VARIANT} AS builder
 
 LABEL com.digitalclash.gsd.image=@image_name@
@@ -28,7 +28,7 @@ RUN set -ex; \
         gcc -o message --static message.c; \
         rm message.c
 
-COPY @gsd_dcp_distfile@ ./geosupport.zip
+COPY @dcp_distfile@ ./geosupport.zip
 COPY geo_h.patch ./geo_h.patch
 COPY geosupport.sh ./geosupport
 COPY geosupport.version ./version
