@@ -1,4 +1,4 @@
-# geosupport-docker
+# geosupport-docker v2.0
 
 Dockerfiles for installing, configuring and using the NYC Department of City Planning's Geosupport application from a Docker container.
 
