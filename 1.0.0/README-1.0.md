@@ -13,15 +13,17 @@ Geosupport is the City of New York's official geocoder of record. The Geosupport
 The latest news about this project.
 
 #### August 27th, 2020
+
 * **Version 1.0.11 available.** This release wraps `Geosupport 20c_20.3`.
 * **Version 1.0.10 available.** This release wraps `Geosupport 20b_20.2`.
 
-  **CHANGES:**
+ **CHANGES:**
 
   > * Retroactive release of `Geosupport 20b_20.2`.
   > * Retroactive update of `README.md` file to clarify release history.
 
 #### March 2nd, 2020
+
 * **Version 1.0.9 available**
 
   **CHANGES:**
@@ -33,15 +35,17 @@ The latest news about this project.
   > * Add Docker build argument and environment variable `GEOSUPPORT_LDCONFIG` set to `true` by default.
   > * Move long comments in Dockerfiles to `README.md`.
 
-  **NOTE**
+  **NOTE:**
 
   > * _2020-08-27: added this section for clarity._
   > * This release is the same as `1.0.8` except as noted by above. The diff is available [here](https://github.com/mlipper/geosupport-docker/commit/3269bf2e41d8301c25d2a6d7e73e79e8dc3ccdab)
 
 #### February 26th, 2020
+
 * **Version 1.0.8 available.** This release wraps `Geosupport 20a_20.1`.
 
 #### December 6th, 2019
+
 * **Version 1.0.7 available**
 
   **CHANGES:**
@@ -49,9 +53,11 @@ The latest news about this project.
   > * Upgrade base image from `debian:stretch` to `debian:buster-slim`
 
 #### December 5th, 2019
+
 * **Version 1.0.6 available.** This release wraps `Geosupport 19d_19.4`.
 
 #### October 22nd, 2019
+
 * **Version 1.0.5 available.** This release wraps `Geosupport 19c_19.3`.
 
   **CHANGES:**
@@ -61,12 +67,15 @@ The latest news about this project.
   > * Created new Docker env file `geosupport.env` which can be referenced from the commandline with `docker-compose` and `docker run`. See [Declare default environment variables in file](https://docs.docker.com/compose/env-file/)
 
 #### June 23rd, 2019
+
 * **Version 1.0.4 available.** This release wraps `Geosupport 19b_19.2`.
 
 #### April 23rd, 2019
+
 * **Version 1.0.3 available.** This release wraps `Geosupport 19a1_19.1`.
 
 #### February 24th, 2019
+
 * **Version 1.0.2 available.** This release wraps `Geosupport 19a_19.1`.
 * **Version 1.0.1 available.** This release wraps `Geosupport 18d_18.4`.
 
@@ -80,7 +89,7 @@ The latest news about this project.
 
 For some image flavors, working with `geosupport-docker` requires that you have a copy of the compressed Geosupport for Linux distribution in the build directory in order to have the application copied/installed to/on whatever image/container you are working on.
 
-Geosupport is free to downloaded from the [Open Data -> Geocoding Application](http://www1.nyc.gov/site/planning/data-maps/open-data.page#geocoding_application)" section of DCP's site. **Note:** *DCP requires a form be filled out **every** time you download anything.*
+Geosupport is free to downloaded from the [Open Data -> Geocoding Application](http://www1.nyc.gov/site/planning/data-maps/open-data.page#geocoding_application)" section of DCP's site. **Note:** _DCP requires a form be filled out **every** time you download anything._
 
 Remember to download the **Linux** distribution as the Windows flavors will not work for this project. Don't be surprised if the description refers to the "Geosupport Desktop Edition&trade;". As long as it's the Linux 64 bit distribution (currently named something like `linux_geo<release>_<version>.zip`), you are good to go.
 
@@ -110,7 +119,8 @@ Dockerfile which uses this as its base image:
 Because Docker's `COPY` instruction is used to copy the specified `GEOSUPPORT_DISTFILE` into the container, it must be in or under the extending image's build context directory.
 
 **BUILD:**
-```
+
+```sh
 #
 # Example: build version 1.0.11
 #
@@ -118,7 +128,8 @@ $ docker build -t mlipper/geosupport-docker:1.0.11-onbuild --build-arg GSD_VERSI
 ```
 
 **BUILD ARGUMENTS:**
-```
+
+```sh
 --build-arg GSD_VERSION=<project_version> # REQUIRED
                                           # Version of this project.
 
@@ -149,7 +160,8 @@ $ docker build -t mlipper/geosupport-docker:1.0.11-onbuild --build-arg GSD_VERSI
 ```
 
 **ENVIRONMENT VARIABLES:**
-```
+
+```sh
 -e GEOSUPPORT_RELEASE=<release>  # Geosupport data release.
                                  # Can also be given as a build arg.
 
@@ -173,7 +185,7 @@ Because Docker's COPY instruction is used to copy the specified `GEOSUPPORT_DIST
 **NOTES:**
 Geosupport is a free download from NYC Dept. of City Planning's site. Make sure to choose the 64 bit Linux version.
 
-> See http://www1.nyc.gov/site/planning/data-maps/open-data.page
+> See DCP's [Open Data](http://www1.nyc.gov/site/planning/data-maps/open-data.page) site.
 
 **USAGE:**
 Base image to install and configure a provided Geosupport Linux distribution on with sensible defaults.
@@ -182,7 +194,7 @@ This image does NOT declare a volume which can be useful given the uncompressed 
 
 With that in mind, consider adding the following to your Dockerfile which uses this as its base image:
 
-```
+```Dockerfile
 FROM geoclient-docker:latest-onbuild
 ...
 # Commands that change the filesystem you want in the volume
@@ -197,10 +209,9 @@ See [Dockerfile.onbuild](./Dockerfile.onbuild) for for the source.
 
 Dockerfile which can be used to run Geosupport interactively from the command line or to simplify the creation and population of Docker `VOLUME`s meant to be shared by multiple containers. This is often helpful in production environments; e.g., to upgrade Geosupport library and data files without stopping app containers using these volumes via Docker's logical reference functionality. Inspired by the ["data-packed volume container"](https://medium.com/on-docker/data-packed-volume-containers-distribute-configuration-c23ff80) as described by author Jeff Nickoloff in his book [Docker in Action](https://www.manning.com/books/docker-in-action).
 
-
 **BUILD:**
 
-```
+```sh
 # Uses 'latest' for parent image by default
 $ docker build -t mlipper/geosupport-docker .
 
@@ -210,7 +221,7 @@ $ docker build --build-arg GSD_VERSION=1.0.11 -t mlipper/geosupport-docker:1.0.1
 
 **RUN:**
 
-```
+```sh
 # Run the Geosupport CLI (i.e. "goat") using version 1.0.11 of this image
 $ docker run -it --rm mlipper/geosupport-docker:1.0.11 goat
 
@@ -221,4 +232,4 @@ $ docker run --name geosupport --mount src=vol-geosupport,target=/opt/geosupport
 $ docker run -it --name geosupport --mount src=vol-geosupport,target=/opt/geosupport mlipper/geosupport-docker:1.0.11
 ```
 
-See [Dockerfile](./Dockerfile) for the source.
+See [Dockerfile](./geosupport-20c_20.3/onbuild/Dockerfile) for the source.
