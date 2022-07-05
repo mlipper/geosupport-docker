@@ -238,7 +238,7 @@ main() {
                 actions+=( "createvol" ); shift
                 ;;
             help)
-                actions+=( "usage" ); shift
+                usage && exit 0;
                 ;;
             removeimage)
                 actions+=( "removeimage" ); shift
@@ -324,9 +324,6 @@ main() {
                         ;;
                     removevol)
                         removeVol "${name}"
-                        ;;
-                    usage)
-                        usage
                         ;;
                     *)
                         die "Invalid action: $action";
