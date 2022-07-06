@@ -1,0 +1,65 @@
+# syntax=docker/dockerfile:1
+ARG VARIANT=debian:bullseye-slim
+FROM ${VARIANT} AS builder
+
+LABEL com.digitalclash.gsd.image=geosupport-docker
+LABEL com.digitalclash.gsd.tag=2.0.1-dist
+LABEL com.digitalclash.gsd.vcs.ref=11e142c
+LABEL com.digitalclash.gsd.geosupport.major=22
+LABEL com.digitalclash.gsd.geosupport.minor=12
+LABEL com.digitalclash.gsd.geosupport.patch=2
+LABEL com.digitalclash.gsd.geosupport.release=a
+
+RUN set -ex; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        gcc \
+        g++ \
+        libc6-dev \
+        patch \
+        unzip \
+    ; \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /dist
+
+COPY message.c ./message.c
+RUN set -ex; \
+        gcc -o message --static message.c; \
+        rm message.c
+
+COPY linux_geo22a2_22_12.zip ./geosupport.zip
+COPY geo_h.patch ./geo_h.patch
+COPY geosupport.sh ./geosupport
+COPY geosupport.version ./version
+
+ENV GEOSUPPORT_FULL_VERSION="${GEOSUPPORT_FULL_VERSION:-22a2_22.12}"
+
+RUN set -eux; \
+# Extract the DCP zip file to /dist
+        version_dir="version-${GEOSUPPORT_FULL_VERSION}"; \
+        mkdir "${version_dir}"; \
+        unzip -qj geosupport.zip "**/bin/c_client" -d "${version_dir}/bin"; \
+        unzip -qj geosupport.zip "**/fls/*" -d "${version_dir}/fls"; \
+        unzip -qj geosupport.zip "**/include/foruser/*" -d "${version_dir}/include"; \
+        unzip -qj geosupport.zip "**/lib/*" -d "${version_dir}/lib"; \
+# Rename the DCP test executable to "goat"
+        mv "${version_dir}/bin/c_client" "${version_dir}/bin/goat"; \
+        rm geosupport.zip; \
+# Back up and patch the DCP "geo.h" header file
+        mv "${version_dir}/include/geo.h" "${version_dir}/include/geo.h.orig"; \
+        patch -i geo_h.patch -o "${version_dir}/include/geo.h" "${version_dir}/include/geo.h.orig"; \
+        rm geo_h.patch; \
+# Add "geosupport" installation script
+        chmod +x geosupport; \
+        mv geosupport "${version_dir}/bin/geosupport"; \
+        mv version "${version_dir}/bin/version" && \
+# Create the gzipped distribution
+        tar czvf "geosupport-${GEOSUPPORT_FULL_VERSION}.tgz" "${version_dir}"; \
+        rm -rf "${version_dir}";
+
+FROM scratch
+COPY --from=builder /dist /dist
+# Don't use VOLUME to allow more flexibility for clients
+# VOLUME /dist
+CMD [ "/dist/message" ]
