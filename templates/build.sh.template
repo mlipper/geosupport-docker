@@ -16,6 +16,7 @@ declare -a repositories=()
 declare -a tags=()
 declare -a variants=()
 
+DEFAULT_EXPORTDIR="$(readlink -vf ../out)"
 DEFAULT_REPOSITORY=local
 DEFAULT_TAG="@image_tag@"
 DEFAULT_VARIANT=default
@@ -40,22 +41,22 @@ cat <<- EOF
 
 Usage: ${this_file} COMMAND [OPTIONS]
 
-Build or remove @image_name@ v@image_tag@ images.
-Create or remove @image_name@ v@image_tag@ volumes.
+Build or remove ${IMAGE_NAME} v${IMAGE_TAG} images.
+Create or remove ${IMAGE_NAME} v${IMAGE_TAG} volumes.
 
 Commands:
 
-  build         Builds @image_name@ v@image_tag@ to the local
+  build         Builds ${IMAGE_NAME} v${IMAGE_TAG} to the local
                 registry using the following template:
 
-                [<repository>/]@image_name@:@image_tag@[-<variant>]
+                [<repository>/]${IMAGE_NAME}:${IMAGE_TAG}[-<variant>]
 
             NOTES:
 
                 The --variant=default option is a special case in
                 which the template will be:
 
-                [<repository>/]@image_name@:@image_tag@
+                [<repository>/]${IMAGE_NAME}:${IMAGE_TAG}
 
                 Builds are always done against the local repository.
                 If the --repository option is not specified, the
@@ -66,6 +67,14 @@ Commands:
                 container directories are determined by the specified
                 --variants option. 
 
+  exportdist    Copy repackaged Geosupport distribution file
+                /dist/geosupport-${FULLVER}.tgz to the
+                host directory specified by the --exportdir=<hostdir>
+                option.
+
+                If the --exportdir=<hostdir> option is not given, <hostdir>
+                defaults to '${DEFAULT_EXPORTDIR}'.
+
   help          Show this usage message and exit.
 
   removeimage   Deletes one or more whose names are determined by the
@@ -75,6 +84,11 @@ Commands:
                 determined by the specified --variants option.
 
 Options:
+
+  --exportdir   The host directory where the Geosupport distribution
+                file will be copied when running the 'exportdist' command.
+
+                If not given, defaults to '${DEFAULT_EXPORTDIR}'.
 
   --latest      When given with the 'build' command, successfully built images
                 and image variants will then be tagged as 'latest(-<variant>)'.
@@ -100,13 +114,13 @@ Options:
                 The following variants are supported:
 
                 dist
-                       image name: @image_name@:@image_tag@-dist
-                      volume name: geosupport-dist-@geosupport_fullversion@
+                       image name: ${IMAGE_NAME}:${IMAGE_TAG}-dist
+                      volume name: geosupport-dist-${FULLVER}
                     volume source: /dist
 
                 default
-                       image name: @image_name@:@image_tag@
-                      volume name: geosupport-dist-@geosupport_fullversion@
+                       image name: ${IMAGE_NAME}:${IMAGE_TAG}
+                      volume name: geosupport-${FULLVER}
                     volume source: \$GEOSUPPORT_HOME
                 
                 If this option is not given, the specified action(s) is applied
@@ -195,6 +209,25 @@ createVol() {
 }
 
 #
+# $1 hostdir
+#
+exportDist() {
+    local hostdir="$1"
+    mkdir -p "${hostdir}"
+    docker build -t gsdexport:latest -<<EOF
+# syntax=docker/dockerfile:1
+FROM busybox:glibc
+RUN mkdir -p /xfer
+COPY --from=geosupport-docker:2.0.1-dist \
+        /dist/geosupport-${FULLVER}.tgz \
+        /dist/geosupport-${FULLVER}.tgz
+CMD ["cp", "-v", "/dist/geosupport-${FULLVER}.tgz", "/xfer"]
+EOF
+    docker run --rm -it --volume="${hostdir}:/xfer:rw" gsdexport:latest
+    docker rmi gsdexport:latest
+}
+
+#
 # $1 name
 #
 removeImage() {
@@ -227,6 +260,8 @@ main() {
         exit 0
     fi
 
+    local exportdir=
+    local exported=
     local tag_as_latest=
 
     while [ $# -gt 0 ]; do
@@ -237,6 +272,9 @@ main() {
             createvol)
                 actions+=( "createvol" ); shift
                 ;;
+            exportdist)
+                actions+=( "exportdist" ); shift
+                ;;
             help)
                 usage && exit 0;
                 ;;
@@ -245,6 +283,9 @@ main() {
                 ;;
             removevol)
                 actions+=( "removevol" ); shift
+                ;;
+            --exportdir=*)
+                exportdir="${##--exportdir=}"; shift
                 ;;
             --latest)
                 tag_as_latest="yes"; shift
@@ -272,6 +313,10 @@ main() {
 
     if [[ "${#actions[@]}" == 0 ]]; then
         die "Error: no command given. Run '${this_file} help' for usage."
+    fi
+
+    if [[ -z "${exportdir}" ]]; then
+        exportdir="${DEFAULT_EXPORTDIR}"
     fi
 
     if [[ "${#repositories[@]}" == 0 ]]; then
@@ -316,6 +361,13 @@ main() {
                         ;;
                     createvol)
                         createVol "${name}" "${target}" "${image}" "${command}"
+                        ;;
+                    exportdist)
+                        if [[ -z "${exported}" ]]; then
+                            exportDist "${exportdir}"
+                            # Only run this command once
+                            exported="yes"
+                        fi
                         ;;
                     removeimage)
                         [[ -n "${image_latest}" ]] &&

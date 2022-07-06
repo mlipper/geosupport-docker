@@ -1,4 +1,4 @@
-# Built @gbuildtimestamp@
+# Built @buildtimestamp@
 
 geosupport_release=@geosupport_release@
 geosupport_patch=@geosupport_patch@
