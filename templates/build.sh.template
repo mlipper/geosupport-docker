@@ -65,7 +65,7 @@ Commands:
 
   createvol     Creates one or more named volumes whose names and
                 container directories are determined by the specified
-                --variants option. 
+                --variants option.
 
   exportdist    Copy repackaged Geosupport distribution file
                 /dist/geosupport-${FULLVER}.tgz to the
@@ -122,7 +122,7 @@ Options:
                        image name: ${IMAGE_NAME}:${IMAGE_TAG}
                       volume name: geosupport-${FULLVER}
                     volume source: \$GEOSUPPORT_HOME
-                
+
                 If this option is not given, the specified action(s) is applied
                 to both 'dist' and 'default' variants. For the 'build' command,
                 order is: 'dist', 'default'. For the 'removeimage' command,
@@ -134,7 +134,7 @@ Options:
                 be available from the local repository. If dist is not available
                 already, use the following when building the variant:
 
-                ${this_file} --variant=dist --variant=default 
+                ${this_file} --variant=dist --variant=default
 
 EOF
 }
@@ -218,7 +218,7 @@ exportDist() {
 # syntax=docker/dockerfile:1
 FROM busybox:glibc
 RUN mkdir -p /xfer
-COPY --from=geosupport-docker:2.0.1-dist \
+COPY --from=${IMAGE_NAME}:${IMAGE_TAG}-dist \
         /dist/geosupport-${FULLVER}.tgz \
         /dist/geosupport-${FULLVER}.tgz
 CMD ["cp", "-v", "/dist/geosupport-${FULLVER}.tgz", "/xfer"]
