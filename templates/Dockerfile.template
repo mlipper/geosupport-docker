@@ -10,25 +10,15 @@ LABEL com.digitalclash.gsd.geosupport.minor=@geosupport_minor@
 LABEL com.digitalclash.gsd.geosupport.patch=@geosupport_patch@
 LABEL com.digitalclash.gsd.geosupport.release=@geosupport_release@
 
-ENV GEOSUPPORT_BASEDIR="${GEOSUPPORT_BASEDIR:-@geosupport_basedir@}"
-ENV GEOSUPPORT_FULL_VERSION @geosupport_fullversion@
-ENV GEOSUPPORT_HOME="${GEOSUPPORT_HOME:-${GEOSUPPORT_BASEDIR}/current}"
-ENV GEOFILES="${GEOFILES:-${GEOSUPPORT_HOME}/fls/}"
-ENV GS_LIBRARY_PATH="${GS_LIBRARY_PATH:-${GEOSUPPORT_HOME}/lib}"
-ENV GS_INCLUDE_PATH="${GS_INCLUDE_PATH:-${GEOSUPPORT_HOME}/include}"
-ENV PATH="${GEOSUPPORT_HOME}/bin:$PATH"
-
 ENV LANG C.UTF-8
 
-COPY --from=@image_name@:@image_tag@-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
+WORKDIR @geosupport_basedir@
 
-WORKDIR "${GEOSUPPORT_BASEDIR}"
+COPY --from=@image_name@:@image_tag@-dist /dist/geosupport-@geosupport_fullversion@.tgz @geosupport_basedir@/geosupport.tgz
 
-RUN set -eux; \
-        \
-        tar xzvf /geosupport.tgz; \
-        ln -s "version-${GEOSUPPORT_FULL_VERSION}" "${GEOSUPPORT_HOME}"; \
-        rm /geosupport.tgz; \
-        "${GEOSUPPORT_HOME}/bin/geosupport" install
+RUN set -eux \
+  && tar xzvf @geosupport_basedir@/geosupport.tgz \
+  && @geosupport_basedir@/version-@geosupport_fullversion@/bin/geosupport install \
+  && rm @geosupport_basedir@/geosupport.tgz
 
-CMD ["geosupport", "-v"]
+CMD ["geosupport", "version"]

@@ -49,6 +49,43 @@ Commands:
 EOF
 }
 
+_create_currentln() {
+    [[ -d "${GEOSUPPORT_BASEDIR}" ]] || die "GEOSUPPORT_BASEDIR directory ${GEOSUPPORT_BASEDIR} does not exist."
+    # Save current directory
+    local oldpwd="$(pwd)"
+    cd "${GEOSUPPORT_BASEDIR}"
+    local geosupport_versiondir="${GEOSUPPORT_BASEDIR}/version-${GEOSUPPORT_FULLVERSION}"
+    [[ -d "${geosupport_versiondir}" ]] || die "Version directory ${geosupport_versiondir} does not exist."
+    # Disable exit on error
+    set +e
+    # Note use of -e and trailing / will check if current is a link to a
+    # directory and fail silently if not.
+    if readlink -e "${GEOSUPPORT_HOME}/"; then
+    # Link already exists
+        local existingln=$(readlink -e "${GEOSUPPORT_HOME}/")
+        echo "GEOSUPPORT_HOME symbolic link directory ${GEOSUPPORT_HOME} already exists."
+        echo "Checking whether it needs to be recreated..."
+        # Re-enable exit on error
+        set -e
+        if [[ "${existingln}" == "${geosupport_versiondir}" ]]; then
+        # Link already exists and points to correct version dir: do nothing
+            echo "GEOSUPPORT_HOME references the correct version directory ${existingln} and will not be recreated."
+            return
+        fi
+        echo "GEOSUPPORT_HOME ${existingln} references the wrong version directory and will be deleted."
+        # Link already exists but points to different version dir: delete it
+        rm -f "${GEOSUPPORT_HOME}"
+    fi
+    # Re-enable exit on error
+    set -e
+    # Create the current link
+    ln -s "$(basename ${geosupport_versiondir})" "${GEOSUPPORT_HOME}"
+    echo "Created GEOSUPPORT_HOME symbolic link:"
+    echo "${GEOSUPPORT_HOME} -> $(readlink -vf "${GEOSUPPORT_HOME}")"
+    # Go back to original directory
+    cd "${oldpwd}"
+}
+
 _createln() {
     [[ "$#" -gt 1 ]] || die "$0: directory and 1 or more file names required.";
     dname="$1"
@@ -70,6 +107,7 @@ Geosupport Environment Variables
 GEOSUPPORT_BASEDIR=${GEOSUPPORT_BASEDIR}
    GEOSUPPORT_HOME=${GEOSUPPORT_HOME}
           GEOFILES=${GEOFILES}
+       GS_BIN_PATH=${GS_BIN_PATH}
    GS_LIBRARY_PATH=${GS_LIBRARY_PATH}
    GS_INCLUDE_PATH=${GS_INCLUDE_PATH}
 
@@ -81,6 +119,7 @@ _goat() {
 }
 
 _install() {
+    _create_currentln
     _createln 'bin' 'geosupport'
     local sofiles=$(ls -1 $GEOSUPPORT_HOME/lib/*.so | xargs basename -s $GEOSUPPORT_HOME | tr '\n' ' ')
     _createln 'lib' ${sofiles[$@]}
@@ -144,6 +183,8 @@ main() {
                 ;;
         esac
     done
+
+    source "@geosupport_basedir@/version-@geosupport_fullversion@/bin/geosupport.env"
 
     for cmd in "${commands[@]}"; do
         case "${cmd}" in
