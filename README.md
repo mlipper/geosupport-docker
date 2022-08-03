@@ -4,7 +4,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 ## Latest Release
 
-**Version 2.0.1** [release notes](./2.0.1/README-2.0.1.md).
+**Version 2.0.2** [release notes](./2.0.2/README-2.0.2.md).
 
 ## Dockerfile.dist
 
@@ -13,7 +13,7 @@ Provides distribution image built from `scratch` which contains only a patched a
 ```Dockerfile
 FROM some-image:latest
 
-ENV GEOSUPPORT_FULL_VERSION "22a2_22.11"
+ENV GEOSUPPORT_FULL_VERSION "22b_22.2"
 
 # Get the Geosupport distro
 COPY --from=geosupport-docker:latest-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
@@ -51,19 +51,19 @@ However, the most common usage of this `Dockerfile` is for creating a volume con
 
 ```sh
 # Create a named volume using the Docker CLI
-$ docker volume create geosupport-22a2_22.11
-geosupport-22a2_22.11
+$ docker volume create geosupport-22b_22.2
+geosupport-22b_22.2
 
 # Populate the volume with the contents of GEOSUPPORT_BASE (replace the default CMD with a simple no-op command)
-$ docker run -it --rm --mount source=geosupport-22a2_22.11,target=/opt/geosupport geosupport-docker:latest /bin/true
+$ docker run -it --rm --mount source=geosupport-22b_22.2,target=/opt/geosupport geosupport-docker:latest /bin/true
 
 # Run an interactive bash shell in a new container to test the named volume
-$ docker run -it --rm --mount source=geosupport-22a2_22.11,target=/opt/geosupport debian:bullseye-slim bash
-root@fc1d63c26dca# cd /opt/geosupport 
+$ docker run -it --rm --mount source=geosupport-22b_22.2,target=/opt/geosupport debian:bullseye-slim bash
+root@fc1d63c26dca# cd /opt/geosupport
 root@fc1d63c26dca# ls -l
 total 4
-lrwxrwxrwx 1 root root   18 Jun 13 18:20 current -> version-22a2_22.11
-drwxr-xr-x 6 root root 4096 Jun 13 18:55 version-22a2_22.11
+lrwxrwxrwx 1 root root   18 Jun 13 18:20 current -> version-22b_22.2
+drwxr-xr-x 6 root root 4096 Jun 13 18:55 version-22b_22.2
 ```
 
 ### About Geosupport Versions
@@ -138,25 +138,25 @@ These instructions assume you are using `bash` and your current working director
 1. Verify the configuration:
 
    ```sh
-   $ ./release.sh show 
+   $ ./release.sh show
 
-   Property                       Value                                   
+   Property                       Value
    ------------------------------ ----------------------------------------
-   baseimage                      debian:bullseye-slim                    
-   builddir                       build                                   
-   buildtimestamp                 Thu Jun 30 15:33:02 EDT 2022            
-   buildtz                        America/New_York                        
-   dcp_distfile                   linux_geo22a2_22_11.zip                 
-   distdir                        dist                                    
-   geosupport_basedir             /opt/geosupport                         
-   geosupport_fullversion         22a2_22.11                              
-   geosupport_major               22                                      
-   geosupport_minor               11                                      
-   geosupport_patch               2                                       
-   geosupport_release             a                                       
-   image_name                     geosupport-docker                       
-   image_tag                      2.0.0                                   
-   vcs_ref                        9a6f56e                                 
+   baseimage                      debian:bullseye-slim
+   builddir                       build
+   buildtimestamp                 Thu Jun 30 15:33:02 EDT 2022
+   buildtz                        America/New_York
+   dcp_distfile                   linux_geo22a2_22_11.zip
+   distdir                        dist
+   geosupport_basedir             /opt/geosupport
+   geosupport_fullversion         22a2_22.11
+   geosupport_major               22
+   geosupport_minor               11
+   geosupport_patch               2
+   geosupport_release             a
+   image_name                     geosupport-docker
+   image_tag                      2.0.0
+   vcs_ref                        9a6f56e
    ```
 
 1. Generate a clean build:
@@ -175,88 +175,88 @@ These instructions assume you are using `bash` and your current working director
    $ build/build.sh help
 
    Usage: build.sh COMMAND [OPTIONS]
-   
+
    Build or remove geosupport-docker v2.0.0 images.
    Create or remove geosupport-docker v2.0.0 volumes.
-   
+
    Commands:
-   
+
      build         Builds geosupport-docker v2.0.0 to the local
                    registry using the following template:
-   
+
                    [<repository>/]geosupport-docker:2.0.0[-<variant>]
-   
+
                NOTES:
-   
+
                    The --variant=default option is a special case in
                    which the template will be:
-   
+
                    [<repository>/]geosupport-docker:2.0.0
-   
+
                    Builds are always done against the local repository.
                    If the --repository option is not specified, the
                    image will be built as described above except the template
                    will not include a '<repository>/' prefix.
-   
+
      createvol     Creates one or more named volumes whose names and
                    container directories are determined by the specified
-                   --variants option. 
-   
+                   --variants option.
+
      help          Show this usage message and exit.
-   
+
      removeimage   Deletes one or more whose names are determined by the
                    specified --variants and/or --repository options.
-   
+
      removevol     Deletes one or more named volumes whose names are
                    determined by the specified --variants option.
-   
+
    Options:
-   
+
      --latest      When given with the 'build' command, successfully built images
                    and image variants will then be tagged as 'latest(-<variant>)'.
-   
+
                    When given with the 'removeimage' command, any image with a
                    matching 'latest(-<variant>)' tag will be removed.
-   
+
                    Adding this argument takes into account whether '--repository'
                    arguments have been given by prefixing image names with the
                    specified repository values.
-   
+
      --repository  Repository prefix to use. If not specified, 'local' is assumed.
-   
+
      --tag         Image tag to use with build command. If not specified, image is
                    built with tag 2.0.0. If the '--latest' argument has
                    been provided, this image will also be tagged as
                    'latest(-<variant>)'.
-   
+
      --variant     Image variant to build. This option can be specified
                    multiple times and order is important: see the DEPENDENCIES
                    note below.
-   
+
                    The following variants are supported:
-   
+
                    dist
                           image name: geosupport-docker:2.0.0-dist
                          volume name: geosupport-dist-22a2_22.11
                        volume source: /dist
-   
+
                    default
                           image name: geosupport-docker:2.0.0
                          volume name: geosupport-dist-22a2_22.11
                        volume source: $GEOSUPPORT_HOME
-                   
+
                    If this option is not given, the specified action(s) is applied
                    to both 'dist' and 'default' variants. For the 'build' command,
                    order is: 'dist', 'default'. For the 'removeimage' command,
                    is: 'default', 'dist'.
-   
+
                DEPENDENCIES:
-   
+
                    Building the default variant requires that the dist variant
                    be available from the local repository. If dist is not available
                    already, use the following when building the variant:
-   
-                   build.sh --variant=dist --variant=default 
+
+                   build.sh --variant=dist --variant=default
    ```
 
 ## About Geosupport
