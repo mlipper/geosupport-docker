@@ -4,7 +4,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 ## Latest Release
 
-**Version 2.0.2** [release notes](./2.0.2/README-2.0.2.md).
+**Version 2.0.5** [release notes](./2.0.5/README-2.0.5.md).
 
 ## Dockerfile.dist
 
@@ -13,7 +13,7 @@ Provides distribution image built from `scratch` which contains only a patched a
 ```Dockerfile
 FROM some-image:latest
 
-ENV GEOSUPPORT_FULL_VERSION "22b_22.2"
+ENV GEOSUPPORT_FULL_VERSION "22c_22.3"
 
 # Get the Geosupport distro
 COPY --from=geosupport-docker:latest-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
@@ -51,19 +51,19 @@ However, the most common usage of this `Dockerfile` is for creating a volume con
 
 ```sh
 # Create a named volume using the Docker CLI
-$ docker volume create geosupport-22b_22.2
-geosupport-22b_22.2
+$ docker volume create geosupport-22c_22.3
+geosupport-22c_22.3
 
 # Populate the volume with the contents of GEOSUPPORT_BASE (replace the default CMD with a simple no-op command)
-$ docker run -it --rm --mount source=geosupport-22b_22.2,target=/opt/geosupport geosupport-docker:latest /bin/true
+$ docker run -it --rm --mount source=geosupport-22c_22.3,target=/opt/geosupport geosupport-docker:latest /bin/true
 
 # Run an interactive bash shell in a new container to test the named volume
-$ docker run -it --rm --mount source=geosupport-22b_22.2,target=/opt/geosupport debian:bullseye-slim bash
+$ docker run -it --rm --mount source=geosupport-22c_22.3,target=/opt/geosupport debian:bullseye-slim bash
 root@fc1d63c26dca# cd /opt/geosupport
 root@fc1d63c26dca# ls -l
 total 4
-lrwxrwxrwx 1 root root   18 Jun 13 18:20 current -> version-22b_22.2
-drwxr-xr-x 6 root root 4096 Jun 13 18:55 version-22b_22.2
+lrwxrwxrwx 1 root root   18 Nov 21 18:20 current -> version-22c_22.3
+drwxr-xr-x 6 root root 4096 Nov 21 18:55 version-22c_22.3
 ```
 
 ### About Geosupport Versions
