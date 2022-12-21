@@ -14,7 +14,7 @@ ENV LANG C.UTF-8
 
 WORKDIR @geosupport_basedir@
 
-COPY --from=@image_name@:@image_tag@-dist /dist/geosupport-@geosupport_fullversion@.tgz @geosupport_basedir@/geosupport.tgz
+COPY --from=@repo_name@/@image_name@:@image_tag@-dist /dist/geosupport.tgz @geosupport_basedir@/geosupport.tgz
 
 RUN set -eux \
   && tar xzvf @geosupport_basedir@/geosupport.tgz \

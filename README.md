@@ -4,19 +4,19 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 ## Latest Release
 
-**Version 2.0.5** [release notes](./2.0.5/README-2.0.5.md).
+**Version 2.0.6** [release notes](./2.0.6/README-2.0.6.md).
 
 ## Dockerfile.dist
 
 Provides distribution image built from `scratch` which contains only a patched and repackaged version of Geosupport allowing for full control and configuration from an unrelated Dockerfile. E.g., simplified creation of volumes and "data-packed volume containers".
 
 ```Dockerfile
-FROM some-image:latest
-
-ENV GEOSUPPORT_FULL_VERSION "22c_22.3"
+FROM someimage:latest
 
 # Get the Geosupport distro
-COPY --from=geosupport-docker:latest-dist /dist/geosupport-${GEOSUPPORT_FULL_VERSION}.tgz /geosupport.tgz
+COPY --from=mlipper/geosupport-docker:latest-dist \
+                  /dist/geosupport.tgz \
+                  /opt/geosupport/geosupport.tgz
 
 # Do whatever I want with it...
 ...
@@ -24,7 +24,7 @@ COPY --from=geosupport-docker:latest-dist /dist/geosupport-${GEOSUPPORT_FULL_VER
 
 ## Dockerfile
 
-Provides a fully functional Geosupport installation which, by default, is built from image `debian:bullseye-slim`. This `Dockerfile` unpacks, installs and configures Geosupport.
+Provides a fully functional Geosupport installation which, by default, is built from image `debian:bookworm-slim`. This `Dockerfile` unpacks, installs and configures Geosupport.
 
 The default `CMD` simply prints Geosupport and geosupport-docker version information.
 
@@ -32,10 +32,10 @@ The default `CMD` simply prints Geosupport and geosupport-docker version informa
 docker run -it --rm geosupport-docker:latest
 ```
 
-To run DCP's CLI application for interacting with Geosupport from the command line, use the following:
+To run DCP's CLI application for interacting with Geosupport from the command line, use the `geosupport` command with the `goat` argument:
 
 ```sh
-$ docker run -it --rm geosupport-docker:latest geosupport-docker goat
+docker run -it --rm geosupport-docker:latest geosupport goat
 
 
 ------------------------------------------------------------------------------------------
@@ -45,6 +45,12 @@ You entered hr
 
 Function HR GRC = 00
 ...etc.
+```
+
+To see what other functionality the `geosupport` command provides, run:
+
+```sh
+docker run -it --rm geosupport-docker:latest geosupport help
 ```
 
 However, the most common usage of this `Dockerfile` is for creating a volume containing a complete Geosupport installation directory.
@@ -58,7 +64,7 @@ geosupport-22c_22.3
 $ docker run -it --rm --mount source=geosupport-22c_22.3,target=/opt/geosupport geosupport-docker:latest /bin/true
 
 # Run an interactive bash shell in a new container to test the named volume
-$ docker run -it --rm --mount source=geosupport-22c_22.3,target=/opt/geosupport debian:bullseye-slim bash
+$ docker run -it --rm --mount source=geosupport-22c_22.3,target=/opt/geosupport debian:bookworm-slim bash
 root@fc1d63c26dca# cd /opt/geosupport
 root@fc1d63c26dca# ls -l
 total 4
@@ -142,75 +148,90 @@ These instructions assume you are using `bash` and your current working director
 
    Property                       Value
    ------------------------------ ----------------------------------------
-   baseimage                      debian:bullseye-slim
+   baseimage                      debian:bookworm-slim
    builddir                       build
-   buildtimestamp                 Thu Jun 30 15:33:02 EDT 2022
+   buildtimestamp                 Wed Dec 21 14:28:15 EST 2022
    buildtz                        America/New_York
-   dcp_distfile                   linux_geo22a2_22_11.zip
+   dcp_distfile                   linux_geo22c_22_3.zip
    distdir                        dist
    geosupport_basedir             /opt/geosupport
-   geosupport_fullversion         22a2_22.11
+   geosupport_fullversion         22c_22.3
    geosupport_major               22
-   geosupport_minor               11
-   geosupport_patch               2
-   geosupport_release             a
+   geosupport_minor               3
+   geosupport_patch
+   geosupport_release             c
    image_name                     geosupport-docker
-   image_tag                      2.0.0
-   vcs_ref                        9a6f56e
+   image_tag                      2.0.6
+   repo_name                      mlipper
+   vcs_ref                        c109251
+
+   Actions
+   ------------------------------
+   show
    ```
 
 1. Generate a clean build:
 
    ```sh
    $ ./release.sh clean generate
-   2022-06-30 15:43:28 [CLEAN] Removing build directory build...
-   2022-06-30 15:43:28 [CLEAN] Build directory build removed.
-   2022-06-30 15:43:28 [GENERATE] Generating source files from templates...
-   2022-06-30 15:43:29 [GENERATE] Source file generation complete.
+   2022-12-21 14:43:28 [CLEAN] Removing build directory build...
+   2022-12-21 14:43:28 [CLEAN] Build directory build removed.
+   2022-12-21 14:43:28 [GENERATE] Generating source files from templates...
+   2022-12-21 14:43:29 [GENERATE] Source file generation complete.
    ```
 
 1. Review usage of the generated build script in the `build` directory:
 
-   ```sh
-   $ build/build.sh help
+   ```bash
+   build/build.sh help
 
    Usage: build.sh COMMAND [OPTIONS]
 
-   Build or remove geosupport-docker v2.0.0 images.
-   Create or remove geosupport-docker v2.0.0 volumes.
+   Build or remove mlipper/geosupport-docker v2.0.6 images.
+   Create or remove mlipper/geosupport-docker v2.0.6 volumes.
 
    Commands:
 
-     build         Builds geosupport-docker v2.0.0 to the local
+     build         Builds mlipper/geosupport-docker v2.0.6 to the local
                    registry using the following template:
 
-                   [<repository>/]geosupport-docker:2.0.0[-<variant>]
+                   mlipper/geosupport-docker:2.0.6[-<variant>]
 
                NOTES:
 
                    The --variant=default option is a special case in
                    which the template will be:
 
-                   [<repository>/]geosupport-docker:2.0.0
+                   mlipper/geosupport-docker:2.0.6
 
                    Builds are always done against the local repository.
-                   If the --repository option is not specified, the
-                   image will be built as described above except the template
-                   will not include a '<repository>/' prefix.
 
      createvol     Creates one or more named volumes whose names and
                    container directories are determined by the specified
                    --variants option.
 
+     exportdist    Copy repackaged Geosupport distribution file
+                   /dist/geosupport-22c_22.3.tgz to the
+                   host directory specified by the --exportdir=<hostdir>
+                   option.
+
+                   If the --exportdir=<hostdir> option is not given, <hostdir>
+                   defaults to '/Users/mlipper/Workspace/github.com/mlipper/geosupport-docker/out'.
+
      help          Show this usage message and exit.
 
      removeimage   Deletes one or more whose names are determined by the
-                   specified --variants and/or --repository options.
+                   specified --variants.
 
      removevol     Deletes one or more named volumes whose names are
                    determined by the specified --variants option.
 
    Options:
+
+     --exportdir   The host directory where the Geosupport distribution
+                   file will be copied when running the 'exportdist' command.
+
+                   If not given, defaults to '/Users/mlipper/Workspace/github.com/mlipper/geosupport-docker/out'.
 
      --latest      When given with the 'build' command, successfully built images
                    and image variants will then be tagged as 'latest(-<variant>)'.
@@ -218,14 +239,8 @@ These instructions assume you are using `bash` and your current working director
                    When given with the 'removeimage' command, any image with a
                    matching 'latest(-<variant>)' tag will be removed.
 
-                   Adding this argument takes into account whether '--repository'
-                   arguments have been given by prefixing image names with the
-                   specified repository values.
-
-     --repository  Repository prefix to use. If not specified, 'local' is assumed.
-
      --tag         Image tag to use with build command. If not specified, image is
-                   built with tag 2.0.0. If the '--latest' argument has
+                   built with tag 2.0.6. If the '--latest' argument has
                    been provided, this image will also be tagged as
                    'latest(-<variant>)'.
 
@@ -236,13 +251,13 @@ These instructions assume you are using `bash` and your current working director
                    The following variants are supported:
 
                    dist
-                          image name: geosupport-docker:2.0.0-dist
-                         volume name: geosupport-dist-22a2_22.11
+                          image name: mlipper/geosupport-docker:2.0.6-dist
+                         volume name: geosupport-dist-22c_22.3
                        volume source: /dist
 
                    default
-                          image name: geosupport-docker:2.0.0
-                         volume name: geosupport-dist-22a2_22.11
+                          image name: mlipper/geosupport-docker:2.0.6
+                         volume name: geosupport-22c_22.3
                        volume source: $GEOSUPPORT_HOME
 
                    If this option is not given, the specified action(s) is applied
