@@ -196,7 +196,7 @@ exportDist() {
 FROM busybox:glibc
 RUN mkdir -p /xfer
 COPY --from=${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-dist \
-        /dist/geosupport-${FULLVER}.tgz \
+        /dist/geosupport.tgz \
         /dist/geosupport-${FULLVER}.tgz
 CMD ["cp", "-v", "/dist/geosupport-${FULLVER}.tgz", "/xfer"]
 EOF
