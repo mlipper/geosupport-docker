@@ -14,6 +14,7 @@ set -o errexit -o nounset
 #echo "Downloading ${FILE_NAME} to ${DOWNLOAD}"
 #
 #curl -o "${DOWNLOAD}" "https://www1.nyc.gov/assets/planning/download/zip/data-maps/open-data/${FILE_NAME}"
+#curl -o "${DOWNLOAD}" "https://s-media.nyc.gov/agencies/dcp/assets/files/zip/data-tools/bytes/${FILE_NAME}"
 #
 #unzip -d "${INSTALL_DIR}" "${DOWNLOAD}"
 #
