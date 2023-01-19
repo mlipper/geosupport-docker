@@ -12,13 +12,18 @@ cd "${this_dir}"
 #
 
 declare -a actions=()
-declare -a tags=()
 declare -a variants=()
 
 DEFAULT_EXPORTDIR="$(readlink -vf ../out)"
 DEFAULT_TAG="@image_tag@"
 DEFAULT_VARIANT=default
+# Initialized by --volname or
+# defaulted to "geosupport-${FULLVER}"
+DEFAULT_VOLUME_NAME=
 DIST_VARIANT=dist
+# Initialized by --distvolname or
+# defaulted to "geosupport-${DIST_VARIANT}-${FULLVER}"
+DIST_VOLUME_NAME=
 FULLVER="@geosupport_fullversion@"
 IMAGE_NAME="@image_name@"
 IMAGE_TAG="@image_tag@"
@@ -59,9 +64,21 @@ Commands:
 
                 Builds are always done against the local repository.
 
-  createvol     Creates one or more named volumes whose names and
-                container directories are determined by the specified
-                --variants option.
+  createvol     Creates one or more named volumes whose names are
+                specified by --volname for the "${DEFAULT_VARIANT}" variant
+                and/or --distvolname for the "${DIST_VARIANT}".
+
+                If --volname is not given and a volume is being created for
+                "${DEFAULT_VARIANT}" variant, the name is defaulted to
+                "geosupport-${FULLVER}".
+
+                If --distvolname is not given and a volume is being created
+                for "${DIST_VARIANT}" variant, the name is defaulted to
+                "geosupport-${DIST_VARIANT}-${FULLVER}".
+
+                Volumes are created for images/container directories
+                specified or defaulted using the logic described below
+                for the --variants option.
 
   exportdist    Copy repackaged Geosupport distribution file
                 /dist/geosupport-${FULLVER}.tgz to the
@@ -77,55 +94,84 @@ Commands:
                 specified --variants.
 
   removevol     Deletes one or more named volumes whose names are
-                determined by the specified --variants option.
+                specified by --volname for the "${DEFAULT_VARIANT}" variant
+                and/or --distvolname for the "${DIST_VARIANT}".
+
+                If --volname is not given and a volume is being deleted for
+                "${DEFAULT_VARIANT}" variant, the name is defaulted to
+                "geosupport-${FULLVER}".
+
+                If --distvolname is not given and a volume is being deleted
+                for "${DIST_VARIANT}" variant, the name is defaulted to
+                "geosupport-${DIST_VARIANT}-${FULLVER}".
+
+                Volumes are deleted based on names specified and/or
+                default names generated using the logic described below
+                when using the --variants option.
 
 Options:
 
-  --exportdir   The host directory where the Geosupport distribution
-                file will be copied when running the 'exportdist' command.
+  --volname      The name for the volume created from the '${DEFAULT_VARIANT}'
+                 variant.
 
-                If not given, defaults to '${DEFAULT_EXPORTDIR}'.
+  --distvolname  The name for the volume created from the '${DIST_VARIANT}'
+                 variant.
 
-  --latest      When given with the 'build' command, successfully built images
-                and image variants will then be tagged as 'latest(-<variant>)'.
+  --exportdir    The host directory where the Geosupport distribution
+                 file will be copied when running the 'exportdist' command.
 
-                When given with the 'removeimage' command, any image with a
-                matching 'latest(-<variant>)' tag will be removed.
+                 If not given, defaults to '${DEFAULT_EXPORTDIR}'.
 
-  --tag         Image tag to use with build command. If not specified, image is
-                built with tag ${DEFAULT_TAG}. If the '--latest' argument has
-                been provided, this image will also be tagged as
-                'latest(-<variant>)'.
+  --latest       When given with the 'build' command, successfully built images
+                 and image variants will then be tagged as 'latest(-<variant>)'.
 
-  --variant     Image variant to build. This option can be specified
-                multiple times and order is important: see the DEPENDENCIES
-                note below.
+                 When given with the 'removeimage' command, any image with a
+                 matching 'latest(-<variant>)' tag will be removed.
 
-                The following variants are supported:
+  --variant      Image variant commands will operate on, dist or default.
+                 When this option is not given, the default behavior is to
+                 apply commands to both variants.
 
-                dist
-                       image name: ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-dist
-                      volume name: geosupport-dist-${FULLVER}
-                    volume source: /dist
+                 The default image variant is built from the dist image variant
+                 and must be available from the local repository for certain
+                 commands. See the DEPENDENCIES section below for more details.
 
-                default
-                       image name: ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
-                      volume name: geosupport-${FULLVER}
-                    volume source: \$GEOSUPPORT_HOME
+                 Commands work as follows for each variant:
 
-                If this option is not given, the specified action(s) is applied
-                to both 'dist' and 'default' variants. For the 'build' command,
-                order is: 'dist', 'default'. For the 'removeimage' command,
-                is: 'default', 'dist'.
+                 dist
+                    build, removeimage
+                        name: ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-dist
+                    createvol, removevol
+                        name: geosupport-dist-${FULLVER}
+                              Use --distvolname to override
+                      source: /dist
+
+
+                 default
+                    build, removeimage
+                        name: ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
+                    createvol, removevol
+                        name: geosupport-${FULLVER}
+                              Use --volname to override
+                      source: \$GEOSUPPORT_HOME
 
             DEPENDENCIES:
 
-                Building the default variant requires that the dist variant
-                be available from the local repository. If dist is not available
-                already, use the following when building the variant:
+                build
+                    Order: build dist, build default
 
-                ${this_file} --variant=dist --variant=default
+                    Building the default image variant requires that the
+                    dist variant be available from the _local_ repository.
+                    If it is not, the build will fail.
 
+                removeimage
+                    Order: removeimage default, removeimage dist
+
+                    Removing the dist image variant requires that the
+                    default image variant be removed first because it
+                    built from the dist variant. Trying to delete the
+                    dist image variant when the default image variant
+                    still exists will fail.
 EOF
 }
 
@@ -167,21 +213,21 @@ buildImage() {
 }
 
 #
-# $1 name
+# $1 volname
 # $2 target
 # $3 image string (includes repo prefix)
 # $4 command
 #
 createVol() {
-    local name="$1"
+    local volname="$1"
     local target="$2"
     local image_string="$3"
     local command="$4"
-    docker volume create "${name}"
+    docker volume create "${volname}"
     if [[ -z "${command}" ]]; then
-        docker run --rm --mount "source=${name},target=${target}"  "${image_string}"
+        docker run --rm --mount "source=${volname},target=${target}"  "${image_string}"
     else
-        docker run --rm --mount "source=${name},target=${target}"  "${image_string}" "${command}"
+        docker run --rm --mount "source=${volname},target=${target}"  "${image_string}" "${command}"
     fi
 }
 
@@ -237,6 +283,8 @@ main() {
         exit 0
     fi
 
+    local defaultvolname=
+    local distvolname=
     local exportdir=
     local exported=
     local tag_as_latest=
@@ -261,8 +309,11 @@ main() {
             removevol)
                 actions+=( "removevol" ); shift
                 ;;
+            --distvolname=*)
+                distvolname="${1##--distvolname=}"; shift
+                ;;
             --exportdir=*)
-                exportdir="${##--exportdir=}"; shift
+                exportdir="${1##--exportdir=}"; shift
                 ;;
             --latest)
                 tag_as_latest="yes"; shift
@@ -270,11 +321,8 @@ main() {
             --variant=*)
                 variants+=( "${1##--variant=}" ); shift
                 ;;
-            #--repository=*)
-            #    repositories+=( "${1##--repository=}" ); shift
-            #    ;;
-            --tag=*)
-                tags+=( "${1##--tags=}" ); shift
+            --volname=*)
+                defaultvolname="${1##--volname=}"; shift
                 ;;
             "")
                 die "Missing command"; shift
@@ -296,51 +344,58 @@ main() {
         exportdir="${DEFAULT_EXPORTDIR}"
     fi
 
-    # The default repository prefix always needs to be built because the
-    # default variant's generated default variant's Dockerfile does not use a repository prefix and only the
-    # - When one or more --repository flag(s) has been given:
-    #
-    # dist variant _with_ a repository prefix will exist.
-    # was given and both variants are being built. Otherwise, the build of
-    # the default variant will fail.
-    #local remove_images_in_default_repo=
-    #if [[ "${#repositories[@]}" > 0 ]]; then
-    #    repositories=( "${DEFAULT_REPOSITORY}" "${repositories[@]}" )
-    #else
-    ## The --repository flag has not been given, so build _only_ with the
-    ## default repository prefix.
-    #    repositories=( "${DEFAULT_REPOSITORY}" )
+    #if [[ "${#variants[@]}" == 0 ]] || [[ "${#variants[@]}" == 2 ]]; then
+    #    variants=( "${DIST_VARIANT}" "${DEFAULT_VARIANT}" )
     #fi
 
-    if [[ "${#tags[@]}" == 0 ]]; then
-        tags=( "${DEFAULT_TAG}" )
-    fi
-
-    if [[ "${#variants[@]}" == 0 ]]; then
-        variants=( "${DIST_VARIANT}" "${DEFAULT_VARIANT}" )
-    fi
-
     for action in "${actions[@]}"; do
+        if [[ "${#variants[@]}" != 1 ]]; then
+            if [[ "${action}" == "build" ]]; then
+                variants=( "${DIST_VARIANT}" "${DEFAULT_VARIANT}" )
+            elif [[ "${action}" == "removeimage" ]]; then
+                variants=( "${DEFAULT_VARIANT}" "${DIST_VARIANT}" )
+            fi
+        fi
         for variant in "${variants[@]}"; do
+
             local image="$(_imageString $REPO_NAME $IMAGE_NAME $IMAGE_TAG $variant)"
             local image_latest=
             if [[ "${tag_as_latest}" == "yes" ]]; then
                 image_latest="$(_imageString $REPO_NAME $IMAGE_NAME "latest" $variant)"
             fi
+
             local file="Dockerfile"
             local name="geosupport-${FULLVER}"
-            local command="/bin/true"
-            # TODO Set mountpoint dynamically using $GEOSUPPORT_HOME
-            local target="@geosupport_basedir@/current"
-            if [[ ! "${variant}" == "${DEFAULT_VARIANT}" ]]; then
+
+            # Relevant to createvol, removevol
+            local command=
+            local target=
+            local volname=
+
+            if [[ "${variant}" == "${DIST_VARIANT}" ]]; then
+            # DIST_VARIANT
                 file="Dockerfile.${variant}"
                 name="geosupport-${variant}-${FULLVER}"
-                command=
-                if [[ "${variant}" == "${DIST_VARIANT}" ]]; then
-                    target="/dist"
+                if [[ -z "${distvolname}" ]]; then
+                    volname="${name}"
+                else
+                    volname="${distvolname}"
                 fi
+                command=
+                target="/dist"
+            elif [[ "${variant}" == "${DEFAULT_VARIANT}" ]]; then
+            # DEFAULT_VARIANT
+                if [[ -z "${defaultvolname}" ]]; then
+                    volname="${name}"
+                else
+                    volname="${defaultvolname}"
+                fi
+                command="/bin/true"
+                target="@geosupport_basedir@"
+            else
+                die "Invalid variant ${variant}"
             fi
-            local volname="geosupport${name}-${FULLVER}"
+
             case "$action" in
                 build)
                     buildImage "${image}" "${file}"
@@ -348,7 +403,7 @@ main() {
                         tagImage "${image}" "${image_latest}"
                     ;;
                 createvol)
-                    createVol "${name}" "${target}" "${image}" "${command}"
+                    createVol "${volname}" "${target}" "${image}" "${command}"
                     ;;
                 exportdist)
                     if [[ -z "${exported}" ]]; then
@@ -363,7 +418,7 @@ main() {
                     removeImage "${image}"
                     ;;
                 removevol)
-                    removeVol "${name}"
+                    removeVol "${volname}"
                     ;;
                 *)
                     die "Invalid action: $action";
