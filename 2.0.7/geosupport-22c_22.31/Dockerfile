@@ -4,7 +4,7 @@ FROM ${VARIANT}
 
 LABEL com.digitalclash.gsd.image=geosupport-docker
 LABEL com.digitalclash.gsd.tag=2.0.7
-LABEL com.digitalclash.gsd.vcs.ref=836befb
+LABEL com.digitalclash.gsd.vcs.ref=58ce7a5
 LABEL com.digitalclash.gsd.geosupport.major=22
 LABEL com.digitalclash.gsd.geosupport.minor=31
 LABEL com.digitalclash.gsd.geosupport.patch=
