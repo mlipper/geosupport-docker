@@ -6,10 +6,10 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 The latest news about this project.
 
-### January 31st, 2023
+### February 10th, 2023
 
 * **Version 2.0.8 available.** This release wraps `Geosupport 23a_23.1`.
 
   **CHANGES:**
 
-  *
+  * Switch base image to `ubuntu:jammy` from `debian:bookworm-slim`.

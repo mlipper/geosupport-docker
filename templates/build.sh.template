@@ -358,11 +358,15 @@ main() {
     for action in "${actions[@]}"; do
 
         # Insure correct order of operations for actions where it matters.
-        if [[ "${#variants[@]}" != 1 ]]; then
+        if [[ "${#variants[@]}" == 2 ]]; then
             if [[ "${action}" == "build" ]]; then
                 variants=( "${DIST_VARIANT}" "${DEFAULT_VARIANT}" )
             elif [[ "${action}" == "removeimage" ]]; then
                 variants=( "${DEFAULT_VARIANT}" "${DIST_VARIANT}" )
+            fi
+        elif [[ "${#variants[@]}" == 0 ]]; then
+            if [[ "${action}" == "exportdist" ]]; then
+                variants=( "${DIST_VARIANT}" )
             fi
         fi
 
