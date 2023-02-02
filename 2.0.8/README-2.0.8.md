@@ -13,3 +13,5 @@ The latest news about this project.
   **CHANGES:**
 
   * Switch base image to `ubuntu:jammy` from `debian:bookworm-slim`.
+  * Change the path of the DEFAULT_EXPORTDIR to `<projectdir>/out/<version>`.
+  * New `custombasedir.sh` script generated which allows creating a new distribution with a different `GEOSUPPORT_BASEDIR` path.

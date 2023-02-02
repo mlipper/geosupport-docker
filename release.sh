@@ -53,7 +53,7 @@ cat <<- EOF
 
       generate      Generate project source using *.template files release.conf.
 
-      show          Print build properties and their values, sorted, to stdout. 
+      show          Print build properties and their values, sorted, to stdout.
 
 EOF
 }
@@ -193,12 +193,16 @@ _prepare_build_dir() {
 }
 
 #
-# Runs housekeeping tasks once build generation is complete. 
+# Runs housekeeping tasks once build generation is complete.
 #
 _post_generate() {
-    local scriptf="${BUILD_DIR}/build.sh"
-    chmod +x "${scriptf}"
-    echo "$(basename "${scriptf}")" > "${BUILD_DIR}/.dockerignore"
+    # Declaring an array in a function automatically makes it local
+    # unless the -g option is given.
+    declare -a scripts=( "${BUILD_DIR}/build.sh" "${BUILD_DIR}/custombasedir.sh" )
+    for script in "${scripts[@]}"; do
+        chmod +x "${script}"
+        echo "$(basename "${script}")" > "${BUILD_DIR}/.dockerignore"
+    done
 }
 
 generate() {

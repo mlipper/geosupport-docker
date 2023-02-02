@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+
+#
+# 2023-02-02 - MSL
+#
+# Customize the path of the GEOSUPPORT_BASEDIR directory used to install
+# and configure Geosupport.
+#
+# By default, GEOSUPPORT_BASEDIR is set to path "@geosupport_basedir@".
+# This script uses the value of global variable CUSTOMDIR which, for
+# now, is hardcoded with path "/gis/geosupport/server".
+#
+# The following files from the generated distribution's bin directory are
+# modified:
+#
+#   version-@geosupport_fullversion@/bin/geosupport.env
+#   version-@geosupport_fullversion@/bin/geosupport
+#
+# It is assumed that the default generated distribution is here:
+#
+#   <PROJECTDIR>/out/@image_tag@/geosupport-@geosupport_fullversion@.tgz
+#
+# If this script completes successfully, the customized distribution will
+# be here:
+#
+#   <PROJECTDIR>/out/@image_tag@/geosupport-server-@geosupport_fullversion@.tgz
+#
+
+set -Eeuo pipefail
+
+#
+# Globals
+#
+
+VERSION="@image_tag@"
+
+cd "$(dirname "$(readlink -vf "$BASH_SOURCE")")/.."
+PROJECTDIR="$(pwd)"
+
+DOCKERDIR=/opt/geosupport
+
+declare -a FILES=()
+FILES=( geosupport geosupport.env )
+
+CUSTOMDIR=/gis/geosupport/server
+
+GOAT_VERSION="@geosupport_fullversion@"
+
+OUTDIR="${PROJECTDIR}/out/${VERSION}"
+
+OUTFILE="${OUTDIR}/geosupport-server-${GOAT_VERSION}.tgz"
+
+WORKDIR="${PROJECTDIR}/temp"
+
+SRCDIR="${WORKDIR}/${VERSION}"
+
+_die() {
+  echo "[ERROR] $1"
+  exit 1
+}
+
+_dexists() {
+  [[ -d "$1" ]] || _die "Directory $1 does not exist."
+}
+
+_fexists() {
+  [[ -f "$1" ]] || _die "File $1 does not exist."
+}
+
+echo "[INFO]"
+echo "[INFO]    CUSTOMDIR: ${CUSTOMDIR}"
+echo "[INFO] GOAT_VERSION: ${GOAT_VERSION}"
+echo "[INFO]       OUTDIR: ${OUTDIR}"
+echo "[INFO]      OUTFILE: ${OUTFILE}"
+echo "[INFO]   PROJECTDIR: ${PROJECTDIR}"
+echo "[INFO]       SRCDIR: ${SRCDIR}"
+echo "[INFO]      VERSION: ${VERSION}"
+echo "[INFO]      WORKDIR: ${WORKDIR}"
+echo "[INFO]"
+
+mkdir -p "${SRCDIR}" \
+  && _dexists "${SRCDIR}" \
+  && cd "${SRCDIR}"
+
+_fexists "${OUTDIR}/geosupport-${GOAT_VERSION}.tgz" \
+  && tar xzvf "${OUTDIR}/geosupport-${GOAT_VERSION}.tgz"
+
+for f in "${FILES[@]}"; do
+  srcfile="${SRCDIR}/version-${GOAT_VERSION}/bin/${f}"
+  _fexists "${srcfile}"
+
+  #
+  # sed usage notes:
+  #
+  #   '-i.orig' backs up original files before in-place substitution
+  #   Use '_' as a delimitter since the pattern contains '/'
+  #   'g' global line match
+  #
+  echo "[INFO] -> sed -i.orig "s_${DOCKERDIR}_${CUSTOMDIR}_g" "${srcfile}""
+  sed -i.orig "s_${DOCKERDIR}_${CUSTOMDIR}_g" "${srcfile}"
+  echo "[INFO] -> mv "${srcfile}.orig" "${WORKDIR}""
+  mv "${srcfile}.orig" "${WORKDIR}"
+done
+
+echo "[INFO] -> tar czvf "${OUTFILE}" -C "${SRCDIR}" "version-${GOAT_VERSION}""
+
+tar czvf "${OUTFILE}" -C "${SRCDIR}" "version-${GOAT_VERSION}" \
+    || _die "Could not create ${OUTFILE}."
+
+# rm -rf "${WORKDIR}" \
+#     || _die "Could not remove ${WORKDIR}."
+
+echo "[INFO] done."

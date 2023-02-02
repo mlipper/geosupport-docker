@@ -14,8 +14,9 @@ cd "${this_dir}"
 declare -a actions=()
 declare -a variants=()
 
-DEFAULT_EXPORTDIR="$(readlink -vf ../out)"
+OUTDIR="$(readlink -vf ../out)"
 DEFAULT_TAG="@image_tag@"
+DEFAULT_EXPORTDIR="${OUTDIR}/${DEFAULT_TAG}"
 DEFAULT_VARIANT=default
 DEFAULT_VOLUME_NAME=
 DIST_VARIANT=dist
