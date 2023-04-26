@@ -42,32 +42,53 @@ cat <<- EOF
 
 Usage: ${this_file} COMMAND [OPTIONS]
 
-Build or remove ${REPO_NAME}/${IMAGE_NAME} v${IMAGE_TAG} images.
-Create or remove ${REPO_NAME}/${IMAGE_NAME} v${IMAGE_TAG} volumes.
+Build or remove ${REPO_NAME}/${IMAGE_NAME} v${IMAGE_TAG} images and volumes.
 
 Commands:
 
-  build         Builds ${REPO_NAME}/${IMAGE_NAME} v${IMAGE_TAG} to the local
-                registry using the following template:
+  build         Builds image version ${IMAGE_TAG} of ${REPO_NAME}/${IMAGE_NAME}.
 
-                ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}[-<variant>]
+      Options:  --variant=<name> (optional)
 
-            NOTES:
+                Specifies that only variant "<name>" be built.
 
-                The --variant=${DEFAULT_VARIANT} option is a special case in
-                which the template will be:
+                There are two supported image variants:
 
-                ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
+                --variant=${DIST_VARIANT}
+                Builds image ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-${DIST_VARIANT}
 
+                --variant=${DEFAULT_VARIANT}
+                Builds image ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
+
+                If the --variant option has not been given, both are built.
                 Builds are always done against the local repository.
 
-  createvol     Creates one or more named volumes whose names are
+                See the description of --variant option below for more
+                details about each variant.
+
+                See the DEPENDENCIES section below for details about
+                dependencies between variants.
+
+                --latest (optional)
+
+                When given, tags built variants using the "latest" naming
+                convention.
+
+                If the "${DIST_VARIANT}" has been built, creates tag
+                ${REPO_NAME}/${IMAGE_NAME}:latest-${DIST_VARIANT}.
+
+                If the "${DEFAULT_VARIANT}" has been built, creates tag
+                ${REPO_NAME}/${IMAGE_NAME}:latest.
+
+  createvol     Creates one or more named volumes whose names are optionally
                 specified by --volname for the "${DEFAULT_VARIANT}" variant
                 and/or --distvolname for the "${DIST_VARIANT}".
 
                 If --volname is not given and a volume is being created for
                 "${DEFAULT_VARIANT}" variant, the name is defaulted to
-                "geosupport-${FULLVER}".
+                "geosupport-${FULLVER}". Volume content is populated from the
+                \$GEOSUPPORT_HOME directory from the
+                ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG} image.
 
                 If --distvolname is not given and a volume is being created
                 for "${DIST_VARIANT}" variant, the name is defaulted to
@@ -77,18 +98,29 @@ Commands:
                 specified or defaulted using the logic described below
                 for the --variants option.
 
-  exportdist    Copy repackaged Geosupport distribution file
-                /dist/geosupport-${FULLVER}.tgz to the
-                host directory specified by the --exportdir=<hostdir>
+  exportdist    Copy repackaged Geosupport distribution file from image
+                ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-${DIST_VARIANT}
+                to the host directory specified by the --exportdir=<hostdir>
                 option.
 
                 If the --exportdir=<hostdir> option is not given, <hostdir>
-                defaults to '${DEFAULT_EXPORTDIR}'.
+                defaults to "${DEFAULT_EXPORTDIR}".
 
   help          Show this usage message and exit.
 
-  removeimage   Deletes one or more whose names are determined by the
-                specified --variants.
+  removeimage   Deletes one or more images from the local repository.
+
+                There are two supported image variants which can be specified
+                using the --variant=<name> option:
+
+                removeimage --variant=${DIST_VARIANT}
+                    Removes image ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-${DIST_VARIANT}
+
+                removeimage --variant=${DEFAULT_VARIANT}
+                    Removes image ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
+
+                If the --variant option has not been given, both variants are
+                removed from the local repository.
 
   removevol     Deletes one or more named volumes whose names are
                 specified by --volname for the "${DEFAULT_VARIANT}" variant
@@ -96,7 +128,6 @@ Commands:
 
                 If --volname is not given and a volume is being deleted for
                 "${DEFAULT_VARIANT}" variant, the name is defaulted to
-                "geosupport-${FULLVER}".
 
                 If --distvolname is not given and a volume is being deleted
                 for "${DIST_VARIANT}" variant, the name is defaulted to
@@ -108,49 +139,47 @@ Commands:
 
 Options:
 
-  --volname      The name for the volume created from the '${DEFAULT_VARIANT}'
-                 variant.
+  --volname=<name>
 
-  --distvolname  The name for the volume created from the '${DIST_VARIANT}'
-                 variant.
+                The name for the volume created from the "${DEFAULT_VARIANT}" variant.
 
-  --exportdir    The host directory where the Geosupport distribution
-                 file will be copied when running the 'exportdist' command.
+  --distvolname=<name>
 
-                 If not given, defaults to '${DEFAULT_EXPORTDIR}'.
+                The name for the volume created from the "${DIST_VARIANT}" variant.
 
-  --latest       When given with the 'build' command, successfully built images
-                 and image variants will then be tagged as 'latest(-<variant>)'.
+  --exportdir=<dir>
 
-                 When given with the 'removeimage' command, any image with a
-                 matching 'latest(-<variant>)' tag will be removed.
+                The host directory where the repackaged Geosupport distribution
+                file will be copied when running the "exportdist" command.
 
-  --variant      Image variant commands will operate on, ${DIST_VARIANT} or ${DEFAULT_VARIANT}.
-                 When this option is not given, the default behavior is to
-                 apply commands to both variants.
+                If not given, defaults to "${DEFAULT_EXPORTDIR}".
 
-                 The ${DEFAULT_VARIANT} image variant is built from the ${DIST_VARIANT} image variant
-                 and must be available from the local repository for certain
-                 commands. See the DEPENDENCIES section below for more details.
+  --latest
+                When given with the "build" command, successfully built images
+                and image variants will then be tagged as "latest(-<variant>)".
 
-                 Commands work as follows for each variant:
+                When given with the "removeimage" command, any image with a
+                matching "latest(-<variant>)" tag will be removed.
 
-                 ${DIST_VARIANT}
-                    build, removeimage
-                        name: ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-${DIST_VARIANT}
-                    createvol, removevol
-                        name: geosupport-${DIST_VARIANT}-${FULLVER}
-                              Use --distvolname to override
-                      source: /dist
+  --variant=<name>
 
+                Specifies the image variant on which commands will operate.
+                The value for "<name>" can be either
+                "${DIST_VARIANT}" or "${DEFAULT_VARIANT}" (without quotes).
 
-                 ${DEFAULT_VARIANT}
-                    build, removeimage
-                        name: ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
-                    createvol, removevol
-                        name: geosupport-${FULLVER}
-                              Use --volname to override
-                      source: \$GEOSUPPORT_HOME
+                The "${DIST_VARIANT}" variant is a base image containing the
+                repackaged and compressed Geosupport distribution file.
+
+                The "${DEFAULT_VARIANT}" is a @baseimage@ image with Geosupport
+                installed and configured. This variant requires that the "${DEFAULT_VARIANT}"
+                variant be available from the local repository.
+
+                If this option is not given, commands accepting multiple
+                variants will default to operating on both in the proper
+                order.
+
+                Before using this option, please see the DEPENDENCIES
+                section below.
 
             DEPENDENCIES:
 
@@ -368,6 +397,8 @@ main() {
         elif [[ "${#variants[@]}" == 0 ]]; then
             if [[ "${action}" == "exportdist" ]]; then
                 variants=( "${DIST_VARIANT}" )
+            elif [[ "${action}" == "build" ]]; then
+                variants=( "${DIST_VARIANT}" "${DEFAULT_VARIANT}" )
             fi
         fi
 

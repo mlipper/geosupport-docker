@@ -4,7 +4,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 ## Latest Release
 
-**Version 2.0.8** [release notes](./2.0.8/README-2.0.8.md).
+**Version 2.0.9** [release notes](./2.0.9/README-2.0.9.md).
 
 ## Dockerfile.dist
 
@@ -57,19 +57,19 @@ However, the most common usage of this `Dockerfile` is for creating a volume con
 
 ```sh
 # Create a named volume using the Docker CLI
-$ docker volume create geosupport-23a_23.1
-geosupport-23a_23.1
+$ docker volume create geosupport-23b_23.2
+geosupport-23b_23.2
 
 # Populate the volume with the contents of GEOSUPPORT_BASE (replace the default CMD with a simple no-op command)
-$ docker run -it --rm --mount source=geosupport-23a_23.1,target=/opt/geosupport geosupport-docker:latest /bin/true
+$ docker run -it --rm --mount source=geosupport-23b_23.2,target=/opt/geosupport geosupport-docker:latest /bin/true
 
 # Run an interactive bash shell in a new container to test the named volume
-$ docker run -it --rm --mount source=geosupport-23a_23.1,target=/opt/geosupport debian:bookworm-slim bash
+$ docker run -it --rm --mount source=geosupport-23b_23.2,target=/opt/geosupport debian:bookworm-slim bash
 root@fc1d63c26dca# cd /opt/geosupport
 root@fc1d63c26dca# ls -l
 total 4
-lrwxrwxrwx 1 root root   18 Nov 21 18:20 current -> version-23a_23.1
-drwxr-xr-x 6 root root 4096 Nov 21 18:55 version-23a_23.1
+lrwxrwxrwx 1 root root   18 Nov 21 18:20 current -> version-23b_23.2
+drwxr-xr-x 6 root root 4096 Nov 21 18:55 version-23b_23.2
 ```
 
 ### About Geosupport Versions
@@ -155,13 +155,13 @@ These instructions assume you are using `bash` and your current working director
    dcp_distfile                   linux_geo22c_22_3.zip
    distdir                        dist
    geosupport_basedir             /opt/geosupport
-   geosupport_fullversion         23a_23.1
+   geosupport_fullversion         23b_23.2
    geosupport_major               22
    geosupport_minor               3
    geosupport_patch
    geosupport_release             c
    image_name                     geosupport-docker
-   image_tag                      2.0.8
+   image_tag                      2.0.9
    repo_name                      mlipper
    vcs_ref                        c109251
 
@@ -190,22 +190,22 @@ These instructions assume you are using `bash` and your current working director
 
    Usage: build.sh COMMAND [OPTIONS]
 
-   Build or remove mlipper/geosupport-docker v2.0.8 images.
-   Create or remove mlipper/geosupport-docker v2.0.8 volumes.
+   Build or remove mlipper/geosupport-docker v2.0.9 images.
+   Create or remove mlipper/geosupport-docker v2.0.9 volumes.
 
    Commands:
 
-     build         Builds mlipper/geosupport-docker v2.0.8 to the local
+     build         Builds mlipper/geosupport-docker v2.0.9 to the local
                    registry using the following template:
 
-                   mlipper/geosupport-docker:2.0.8[-<variant>]
+                   mlipper/geosupport-docker:2.0.9[-<variant>]
 
                NOTES:
 
                    The --variant=default option is a special case in
                    which the template will be:
 
-                   mlipper/geosupport-docker:2.0.8
+                   mlipper/geosupport-docker:2.0.9
 
                    Builds are always done against the local repository.
 
@@ -215,18 +215,18 @@ These instructions assume you are using `bash` and your current working director
 
                    If --volname is not given and a volume is being created for
                    "default" variant, the name is defaulted to
-                   "geosupport-23a_23.1".
+                   "geosupport-23b_23.2".
 
                    If --distvolname is not given and a volume is being created
                    for "dist" variant, the name is defaulted to
-                   "geosupport-dist-23a_23.1".
+                   "geosupport-dist-23b_23.2".
 
                    Volumes are created for images/container directories
                    specified or defaulted using the logic described below
                    for the --variants option.
 
      exportdist    Copy repackaged Geosupport distribution file
-                   /dist/geosupport-23a_23.1.tgz to the
+                   /dist/geosupport-23b_23.2.tgz to the
                    host directory specified by the --exportdir=<hostdir>
                    option.
 
@@ -244,11 +244,11 @@ These instructions assume you are using `bash` and your current working director
 
                    If --volname is not given and a volume is being deleted for
                    "default" variant, the name is defaulted to
-                   "geosupport-23a_23.1".
+                   "geosupport-23b_23.2".
 
                    If --distvolname is not given and a volume is being deleted
                    for "dist" variant, the name is defaulted to
-                   "geosupport-dist-23a_23.1".
+                   "geosupport-dist-23b_23.2".
 
                    Volumes are deleted based on names specified and/or
                    default names generated using the logic described below
@@ -285,18 +285,18 @@ These instructions assume you are using `bash` and your current working director
 
                     dist
                        build, removeimage
-                           name: mlipper/geosupport-docker:2.0.8-dist
+                           name: mlipper/geosupport-docker:2.0.9-dist
                        createvol, removevol
-                           name: geosupport-dist-23a_23.1
+                           name: geosupport-dist-23b_23.2
                                  Use --distvolname=<name> to override
                          source: /dist
 
 
                     default
                        build, removeimage
-                           name: mlipper/geosupport-docker:2.0.8
+                           name: mlipper/geosupport-docker:2.0.9
                        createvol, removevol
-                           name: geosupport-23a_23.1
+                           name: geosupport-23b_23.2
                                  Use --volname=<name> to override
                          source: $GEOSUPPORT_HOME
 
