@@ -24,7 +24,7 @@ COPY --from=mlipper/geosupport-docker:latest-dist \
 
 ## Dockerfile
 
-Provides a fully functional Geosupport installation which, by default, is built from image `debian:bookworm-slim`. This `Dockerfile` unpacks, installs and configures Geosupport.
+Provides a fully functional Geosupport installation which, by default, is built from image `ubuntu:jammy`. This `Dockerfile` unpacks, installs and configures Geosupport.
 
 The default `CMD` simply prints Geosupport and geosupport-docker version information.
 
@@ -64,7 +64,7 @@ geosupport-23b_23.2
 $ docker run -it --rm --mount source=geosupport-23b_23.2,target=/opt/geosupport geosupport-docker:latest /bin/true
 
 # Run an interactive bash shell in a new container to test the named volume
-$ docker run -it --rm --mount source=geosupport-23b_23.2,target=/opt/geosupport debian:bookworm-slim bash
+$ docker run -it --rm --mount source=geosupport-23b_23.2,target=/opt/geosupport ubuntu:jammy bash
 root@fc1d63c26dca# cd /opt/geosupport
 root@fc1d63c26dca# ls -l
 total 4
@@ -94,10 +94,10 @@ The final Geosupport distriubtion is identified as follows:
 * `major_ver` - Two-digit year
 * `minor_ver` - One or more digits
 
-For example, in the first quarter of 2022, DCP published the distribution for "Geosupport release 22a2 / version 22.11". In this case, the template above has the following values:
+For example, in the first quarter of 2022, DCP published the distribution for "Geosupport release 23b / version 23.2". In this case, the template above has the following values:
 
 ```text
-22a2_22.11
+23b_23.2
 ```
 
 * `major_rel`: "22"
@@ -138,7 +138,7 @@ These instructions assume you are using `bash` and your current working director
 1. If necessary, rename the downloaded `zip` file to follow the expected naming convention:
 
    ```sh
-   mv dist/geo22a2_22.11.zip dist/linux_geo22a2_22_11.zip
+   mv dist/geo23b_23.2.zip dist/linux_geo23b_23_2.zip
    ```
 
 1. Verify the configuration:
@@ -148,22 +148,22 @@ These instructions assume you are using `bash` and your current working director
 
    Property                       Value
    ------------------------------ ----------------------------------------
-   baseimage                      debian:bookworm-slim
+   baseimage                      ubuntu:jammy
    builddir                       build
-   buildtimestamp                 Wed Dec 21 14:28:15 EST 2022
+   buildtimestamp                 Fri Apr 28 13:28:42 EDT 2023
    buildtz                        America/New_York
-   dcp_distfile                   linux_geo22c_22_3.zip
+   dcp_distfile                   linux_geo23b_23_2.zip
    distdir                        dist
    geosupport_basedir             /opt/geosupport
    geosupport_fullversion         23b_23.2
-   geosupport_major               22
-   geosupport_minor               3
+   geosupport_major               23
+   geosupport_minor               2
    geosupport_patch
-   geosupport_release             c
+   geosupport_release             b
    image_name                     geosupport-docker
    image_tag                      2.0.9
    repo_name                      mlipper
-   vcs_ref                        c109251
+   vcs_ref                        af812a0
 
    Actions
    ------------------------------
@@ -190,133 +190,62 @@ These instructions assume you are using `bash` and your current working director
 
    Usage: build.sh COMMAND [OPTIONS]
 
-   Build or remove mlipper/geosupport-docker v2.0.9 images.
-   Create or remove mlipper/geosupport-docker v2.0.9 volumes.
+   Build images, create or export volumes for mlipper/geosupport-docker v2.0.9.
 
    Commands:
 
-     build         Builds mlipper/geosupport-docker v2.0.9 to the local
-                   registry using the following template:
+     build         Builds image version 2.0.9 of mlipper/geosupport-docker.
 
-                   mlipper/geosupport-docker:2.0.9[-<variant>]
+       Options:    --variant=<name> (optional)
 
-               NOTES:
+                   Specifies that only variant "<name>" be built.
 
-                   The --variant=default option is a special case in
-                   which the template will be:
-
-                   mlipper/geosupport-docker:2.0.9
-
+                   If the --variant option has not been given, both are built.
                    Builds are always done against the local repository.
 
-     createvol     Creates one or more named volumes whose names are
-                   specified by --volname for the "default" variant
-                   and/or --distvolname for the "dist".
+                   --variant=dist
+                   Builds image mlipper/geosupport-docker:2.0.9-dist
 
-                   If --volname is not given and a volume is being created for
-                   "default" variant, the name is defaulted to
+                   --variant=default
+                   Builds image mlipper/geosupport-docker:2.0.9
+
+                   When specifying only the "default" variant,
+                   the "dist" variant must be available from the
+                   local repository or the build will fail.
+
+                   --latest (optional)
+
+                   When given, tags built variants using the "latest" naming
+                   convention.
+
+                   If the "dist" has been built, creates tag
+                   mlipper/geosupport-docker:latest-dist.
+
+                   If the "default" has been built, creates tag
+                   mlipper/geosupport-docker:latest.
+
+     createvol     Creates a volume from the contents of the $GEOSUPPORT_BASEDIR
+                   directory in image mlipper/geosupport-docker:2.0.9
+                   (i.e., the "default" variant).
+
+       Options:    --volname=<name> (optional)
+
+                   The "<name>" to use when creating the volume.
+                   If --volname is not given, the name is defaulted to
                    "geosupport-23b_23.2".
 
-                   If --distvolname is not given and a volume is being created
-                   for "dist" variant, the name is defaulted to
-                   "geosupport-dist-23b_23.2".
+     exportdist    Copy repackaged Geosupport distribution file from image
+                   mlipper/geosupport-docker:2.0.9-dist
+                   to a host directory.
 
-                   Volumes are created for images/container directories
-                   specified or defaulted using the logic described below
-                   for the --variants option.
+       Options:    --exportdir=<name> (optional)
 
-     exportdist    Copy repackaged Geosupport distribution file
-                   /dist/geosupport-23b_23.2.tgz to the
-                   host directory specified by the --exportdir=<hostdir>
-                   option.
+                   The host directory where the repackaged Geosupport distribution
+                   file will be copied when running the "exportdist" command.
 
-                   If the --exportdir=<hostdir> option is not given, <hostdir>
-                   defaults to '/path/to/geosupport-docker/out'.
+                   If not given, defaults to "/Users/mlipper/Workspace/github.com/mlipper/geosupport-docker/out/2.0.9".
 
      help          Show this usage message and exit.
-
-     removeimage   Deletes one or more whose names are determined by the
-                   specified --variants.
-
-     removevol     Deletes one or more named volumes whose names are
-                   specified by --volname for the "default" variant
-                   and/or --distvolname for the "dist".
-
-                   If --volname is not given and a volume is being deleted for
-                   "default" variant, the name is defaulted to
-                   "geosupport-23b_23.2".
-
-                   If --distvolname is not given and a volume is being deleted
-                   for "dist" variant, the name is defaulted to
-                   "geosupport-dist-23b_23.2".
-
-                   Volumes are deleted based on names specified and/or
-                   default names generated using the logic described below
-                   when using the --variants option.
-
-   Options:
-
-     --volname      The name for the volume created from the 'default'
-                    variant.
-
-     --distvolname  The name for the volume created from the 'dist'
-                    variant.
-
-     --exportdir    The host directory where the Geosupport distribution
-                    file will be copied when running the 'exportdist' command.
-
-                    If not given, defaults to '/path/to/geosupport-docker/out'.
-
-     --latest       When given with the 'build' command, successfully built images
-                    and image variants will then be tagged as 'latest(-<variant>)'.
-
-                    When given with the 'removeimage' command, any image with a
-                    matching 'latest(-<variant>)' tag will be removed.
-
-     --variant      Image variant commands will operate on, dist or default.
-                    When this option is not given, the default behavior is to
-                    apply commands to both variants.
-
-                    The default image variant is built from the dist image variant
-                    and must be available from the local repository for certain
-                    commands. See the DEPENDENCIES section below for more details.
-
-                    Commands work as follows for each variant:
-
-                    dist
-                       build, removeimage
-                           name: mlipper/geosupport-docker:2.0.9-dist
-                       createvol, removevol
-                           name: geosupport-dist-23b_23.2
-                                 Use --distvolname=<name> to override
-                         source: /dist
-
-
-                    default
-                       build, removeimage
-                           name: mlipper/geosupport-docker:2.0.9
-                       createvol, removevol
-                           name: geosupport-23b_23.2
-                                 Use --volname=<name> to override
-                         source: $GEOSUPPORT_HOME
-
-               DEPENDENCIES:
-
-                   build
-                       Order: build dist, build default
-
-                       Building the default image variant requires that the
-                       dist variant be available from the _local_ repository.
-                       If it is not, the build will fail.
-
-                   removeimage
-                       Order: removeimage default, removeimage dist
-
-                       Removing the dist image variant requires that the
-                       default image variant be removed first because it
-                       built from the dist variant. Trying to delete the
-                       dist image variant when the default image variant
-                       still exists will fail.
 
    ```
 
