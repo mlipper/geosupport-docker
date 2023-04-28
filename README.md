@@ -163,7 +163,7 @@ These instructions assume you are using `bash` and your current working director
    image_name                     geosupport-docker
    image_tag                      2.0.9
    repo_name                      mlipper
-   vcs_ref                        af812a0
+   vcs_ref                        e3c2622
 
    Actions
    ------------------------------
