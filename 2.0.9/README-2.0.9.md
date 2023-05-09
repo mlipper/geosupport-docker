@@ -6,7 +6,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 The latest news about this project.
 
-### May 8th, 2023
+### May 9th, 2023
 
 * **Version 2.0.9 available.** This release wraps `Geosupport 23b_23.2`.
 
