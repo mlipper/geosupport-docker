@@ -4,7 +4,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 ## Latest Release
 
-**Version 2.0.9** [release notes](./2.0.9/README-2.0.9.md).
+**Version 2.0.10** [release notes](./2.0.10/README-2.0.10.md).
 
 ## Dockerfile.dist
 
@@ -163,7 +163,7 @@ These instructions assume you are using `bash` and your current working director
    geosupport_patch
    geosupport_release             b
    image_name                     geosupport-docker
-   image_tag                      2.0.9
+   image_tag                      2.0.10
    repo_name                      mlipper
    vcs_ref                        e3c2622
 
@@ -192,11 +192,11 @@ These instructions assume you are using `bash` and your current working director
 
    Usage: build.sh COMMAND [OPTIONS]
 
-   Build images, create or export volumes for mlipper/geosupport-docker v2.0.9.
+   Build images, create or export volumes for mlipper/geosupport-docker v2.0.10.
 
    Commands:
 
-     build         Builds image version 2.0.9 of mlipper/geosupport-docker.
+     build         Builds image version 2.0.10 of mlipper/geosupport-docker.
 
        Options:    --variant=<name> (optional)
 
@@ -206,10 +206,10 @@ These instructions assume you are using `bash` and your current working director
                    Builds are always done against the local repository.
 
                    --variant=dist
-                   Builds image mlipper/geosupport-docker:2.0.9-dist
+                   Builds image mlipper/geosupport-docker:2.0.10-dist
 
                    --variant=default
-                   Builds image mlipper/geosupport-docker:2.0.9
+                   Builds image mlipper/geosupport-docker:2.0.10
 
                    When specifying only the "default" variant,
                    the "dist" variant must be available from the
@@ -227,7 +227,7 @@ These instructions assume you are using `bash` and your current working director
                    mlipper/geosupport-docker:latest.
 
      createvol     Creates a volume from the contents of the $GEOSUPPORT_BASEDIR
-                   directory in image mlipper/geosupport-docker:2.0.9
+                   directory in image mlipper/geosupport-docker:2.0.10
                    (i.e., the "default" variant).
 
        Options:    --volname=<name> (optional)
@@ -237,7 +237,7 @@ These instructions assume you are using `bash` and your current working director
                    "geosupport-23b_23.2".
 
      exportdist    Copy repackaged Geosupport distribution file from image
-                   mlipper/geosupport-docker:2.0.9-dist
+                   mlipper/geosupport-docker:2.0.10-dist
                    to a host directory.
 
        Options:    --exportdir=<name> (optional)
@@ -245,7 +245,7 @@ These instructions assume you are using `bash` and your current working director
                    The host directory where the repackaged Geosupport distribution
                    file will be copied when running the "exportdist" command.
 
-                   If not given, defaults to "/Users/mlipper/Workspace/github.com/mlipper/geosupport-docker/out/2.0.9".
+                   If not given, defaults to "/Users/mlipper/Workspace/github.com/mlipper/geosupport-docker/out/2.0.10".
 
      help          Show this usage message and exit.
 

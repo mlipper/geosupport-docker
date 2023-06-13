@@ -56,6 +56,7 @@ _create_currentln() {
     cd "${GEOSUPPORT_BASEDIR}"
     local geosupport_versiondir="${GEOSUPPORT_BASEDIR}/version-${GEOSUPPORT_FULLVERSION}"
     [[ -d "${geosupport_versiondir}" ]] || die "Version directory ${geosupport_versiondir} does not exist."
+    local createnewln="true"
     # Disable exit on error
     set +e
     # Note use of -e and trailing / will check if current is a link to a
@@ -70,30 +71,37 @@ _create_currentln() {
         if [[ "${existingln}" == "${geosupport_versiondir}" ]]; then
         # Link already exists and points to correct version dir: do nothing
             echo "GEOSUPPORT_HOME references the correct version directory ${existingln} and will not be recreated."
-            return
+            createnewln="false"
+        else
+            echo "GEOSUPPORT_HOME ${existingln} references the wrong version directory and will be deleted."
+            # Link already exists but points to different version dir: delete it
+            rm -f "${GEOSUPPORT_HOME}"
         fi
-        echo "GEOSUPPORT_HOME ${existingln} references the wrong version directory and will be deleted."
-        # Link already exists but points to different version dir: delete it
-        rm -f "${GEOSUPPORT_HOME}"
     fi
     # Re-enable exit on error
     set -e
+    if [[ "${createnewln}" == "true" ]]; then
     # Create the current link
-    ln -s "$(basename ${geosupport_versiondir})" "${GEOSUPPORT_HOME}"
-    echo "Created GEOSUPPORT_HOME symbolic link:"
-    echo "${GEOSUPPORT_HOME} -> $(readlink -vf "${GEOSUPPORT_HOME}")"
+        ln -s "$(basename ${geosupport_versiondir})" "${GEOSUPPORT_HOME}"
+        echo "Created GEOSUPPORT_HOME symbolic link:"
+        echo "${GEOSUPPORT_HOME} -> $(readlink -vf "${GEOSUPPORT_HOME}")"
+    fi
     # Go back to original directory
     cd "${oldpwd}"
 }
-
 _createln() {
     [[ "$#" -gt 1 ]] || die "$0: directory and 1 or more file names required.";
     dname="$1"
     shift
     cd "/usr/local/${dname}"
     for f in "$@"; do
-        echo "creating link /usr/local/${dname}/${f} -> ${GEOSUPPORT_HOME}/${dname}/${f}";
-        ln -svL  "${GEOSUPPORT_HOME}/${dname}/${f}" "${f}";
+        if readlink -e "${f}"; then
+        # Link already exists
+            echo "Symbolic link /usr/local/${dname}/${f} -> ${GEOSUPPORT_HOME}/${dname}/${f} already exists and will not be recreated.";
+        else
+            ln -svL  "${GEOSUPPORT_HOME}/${dname}/${f}" "${f}";
+            echo "Created link /usr/local/${dname}/${f} -> ${GEOSUPPORT_HOME}/${dname}/${f}.";
+        fi
     done;
     cd "${this_dir}"
 }
