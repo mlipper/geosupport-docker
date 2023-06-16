@@ -12,6 +12,9 @@ declare -a actions
 # Hashtable of build properties-to-values
 declare -A confmap
 
+# Generated file names used for release
+declare -a RELEASE_FILES=('README-release.md' 'Dockerfile' 'Dockerfile.dist')
+
 # Default property values
 BUILD_DIR=
 
@@ -52,6 +55,9 @@ cat <<- EOF
       clean         Remove the local build directory.
 
       generate      Generate project source using *.template files release.conf.
+
+      release       Create a new release folder and populate it with relevant
+                    build artifacts.
 
       show          Print build properties and their values, sorted, to stdout.
 
@@ -158,10 +164,23 @@ _setc() {
 #       when this function gets called.
 #
 _set_missing_props() {
+    # Usually, buildtz property will not be set and the 'TZ=' date format
+    # argument will be empty: i.e., timezone uses default value.
+    local tz="$(_getc buildtz)"
     if [[ ! -n "$(_getc buildtimestamp)" ]]; then
-        local tz="$(_getc buildtz)"
         local timestamp="$(TZ="${tz}" date)"
         _setc "buildtimestamp" "${timestamp}"
+    fi
+    if [[ ! -n "$(_getc release_date)" ]]; then
+        local releasedt="$(TZ="${tz}" date +"%B %d, %Y")"
+        _setc "release_date" "${releasedt}"
+    fi
+    if [[ ! -n "$(_getc release_majorminor)" ]]; then
+        local tagmajor
+        local tagminor
+        local tagpoint
+        IFS=. read tagmajor tagminor tagpoint < <(echo "$(_getc image_tag)")
+        _setc "release_majorminor" "${tagmajor}.${tagminor}"
     fi
     local major="$(_getc geosupport_major)"
     local release="$(_getc geosupport_release)"
@@ -219,6 +238,25 @@ generate() {
     rm "${sedf}"
     _post_generate
     log "GENERATE" "Source file generation complete."
+}
+
+release() {
+    log "RELEASE" "Creating release files from build..."
+    [[ -d "${BUILD_DIR}" ]] ||
+        die "Release error: ${BUILD_DIR} does not exist. Hint: Run generate command first."
+    local img_tag="$(_getc image_tag)"
+    local gs_fullversion="$(_getc geosupport_fullversion)"
+    mkdir -p "${img_tag}/geosupport-${gs_fullversion}"
+    for f in "${RELEASE_FILES[@]}"; do
+        [[ -f "${BUILD_DIR}/${f}" ]] ||
+            die "Release error: ${BUILD_DIR}/${f} does not exist. Hint: Run generate command first."
+        if [[ "${f}" == "README-release.md" ]]; then
+            cp "${BUILD_DIR}/${f}" "${img_tag}/README-${img_tag}.md"
+        else
+            cp "${BUILD_DIR}/${f}" "${img_tag}/geosupport-${gs_fullversion}/${f}"
+        fi
+    done
+    log "RELEASE" "Release file generation complete."
 }
 
 show() {
@@ -287,6 +325,9 @@ main() {
             generate)
                 actions+=( "generate" ); shift
                 ;;
+            release)
+                actions+=( "release" ); shift
+                ;;
             show)
                 actions+=( "show" ); shift
                 ;;
@@ -310,6 +351,8 @@ main() {
                 clean ;;
             generate)
                 generate ;;
+            release)
+                release ;;
             show)
                 show ;;
             *)
