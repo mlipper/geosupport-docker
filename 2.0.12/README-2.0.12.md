@@ -14,3 +14,4 @@ The latest news about this project.
 
   * Fix `README-release.md.template` to use value of `image_tag` from conf file.
   * Remove Docker label `com.digitalclash.gsd.vcs.ref` from `Dockerfile` because the logic is flawed given the current build process.
+  * Remove Docker label `com.digitalclash.gsd.vcs.ref` from `Dockerfile.dist` because the logic is flawed given the current build process.

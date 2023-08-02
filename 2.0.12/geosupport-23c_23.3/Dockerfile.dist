@@ -58,7 +58,6 @@ FROM scratch
 
 LABEL com.digitalclash.gsd.image=geosupport-docker
 LABEL com.digitalclash.gsd.tag=2.0.12-dist
-LABEL com.digitalclash.gsd.vcs.ref=3a4c059
 LABEL com.digitalclash.gsd.geosupport.major=23
 LABEL com.digitalclash.gsd.geosupport.minor=3
 LABEL com.digitalclash.gsd.geosupport.patch=
