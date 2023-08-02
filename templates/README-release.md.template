@@ -8,7 +8,7 @@ The latest news about this project.
 
 ### @release_date@
 
-* **Version 2.0.10 available.** This release wraps `Geosupport @geosupport_fullversion@`.
+* **Version @image_tag@ available.** This release wraps `Geosupport @geosupport_fullversion@`.
 
   **CHANGES:**
 

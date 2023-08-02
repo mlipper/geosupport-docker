@@ -196,11 +196,11 @@ _set_missing_props() {
         _setc "dcp_distfile" "linux_geo${version_prefix}_${minor}.zip"
     fi
     # Set vcs_ref if it is available
-    local vcs_ref="unknown"
-    if command -v git &> /dev/null; then
-        vcs_ref="$(git rev-parse --short HEAD)"
-    fi
-    _setc "vcs_ref" "${vcs_ref}"
+    #local vcs_ref="unknown"
+    #if command -v git &> /dev/null; then
+    #    vcs_ref="$(git rev-parse --short HEAD)"
+    #fi
+    #_setc "vcs_ref" "${vcs_ref}"
 }
 
 _prepare_build_dir() {

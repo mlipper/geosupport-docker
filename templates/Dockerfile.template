@@ -4,7 +4,6 @@ FROM ${VARIANT}
 
 LABEL com.digitalclash.gsd.image=@image_name@
 LABEL com.digitalclash.gsd.tag=@image_tag@
-LABEL com.digitalclash.gsd.vcs.ref=@vcs_ref@
 LABEL com.digitalclash.gsd.geosupport.major=@geosupport_major@
 LABEL com.digitalclash.gsd.geosupport.minor=@geosupport_minor@
 LABEL com.digitalclash.gsd.geosupport.patch=@geosupport_patch@
