@@ -256,6 +256,7 @@ release() {
             cp "${BUILD_DIR}/${f}" "${img_tag}/geosupport-${gs_fullversion}/${f}"
         fi
     done
+    sed -i.bak "s:^\*\*Version [0-9]\.[0-9]\.[0-9][0-9]*.*:**Version ${img_tag}** [release notes](./${img_tag}/README-${img_tag}.md).:g" README.md
     log "RELEASE" "Release file generation complete."
 }
 

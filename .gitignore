@@ -6,3 +6,4 @@ dist
 out
 temp
 local
+**/*.bak
