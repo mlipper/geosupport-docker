@@ -4,7 +4,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 ## Latest Release
 
-**Version 2.0.12** [release notes](./2.0.12/README-2.0.12.md).
+**Version 2.0.13** [release notes](./2.0.13/README-2.0.13.md).
 
 ## Dockerfile.dist
 
