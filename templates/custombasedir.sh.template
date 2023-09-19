@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
 
 #
-# 2023-02-02 - MSL
-#
 # Customize the path of the GEOSUPPORT_BASEDIR directory used to install
 # and configure Geosupport.
+#
+# Before running this script, the distribution must be generated using the
+# desired release configuration. E.g.,
+#
+#   # 1. Edit <PROJECTDIR>/release.conf as needed.
+#   # 2. In a bash shell, change to the root project directory.
+#   cd <PROJECTDIR>
+#   # 3. Clean and regenerate the build script.
+#   ./release.sh clean generate
+#   # 4. Build the distribution.
+#   ./build/build.sh build
+#   # 5. Export the distribution from the image/container to the local filesystem.
+#   ./build/build.sh exportdist
+#   # 6. Run this script.
+#        (Adjust the path of the CUSTOMDIR global, first, if needed)
+#   ./build/custombasedir.sh
 #
 # By default, GEOSUPPORT_BASEDIR is set to path "@geosupport_basedir@".
 # This script uses the value of global variable CUSTOMDIR which, for
