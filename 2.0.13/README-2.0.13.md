@@ -12,5 +12,4 @@ The latest news about this project.
 
   **CHANGES:**
 
-  * Feature
-  * Issue #
+  * DCP Geosupport patch for DSNY bulk pickup collection data.
