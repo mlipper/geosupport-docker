@@ -188,12 +188,10 @@ _set_missing_props() {
     local minor="$(_getc geosupport_minor)"
     local version_prefix="${major}${release}${patch}_${major}"
     if [[ ! -n "$(_getc geosupport_fullversion)" ]]; then
-        # Uses '.' to separate major and minor version (unlike 'dcp_distfile' below)
         _setc "geosupport_fullversion" "${version_prefix}.${minor}"
     fi
     if [[ ! -n "$(_getc dcp_distfile)" ]]; then
-        # Uses '_' to separate major and minor version (unlike 'geosupport_fullversion' above)
-        _setc "dcp_distfile" "linux_geo${version_prefix}_${minor}.zip"
+        _setc "dcp_distfile" "geo${version_prefix}.${minor}.zip"
     fi
     # Set vcs_ref if it is available
     #local vcs_ref="unknown"
