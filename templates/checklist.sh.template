@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+this_dir="$(dirname "$(readlink -vf "$BASH_SOURCE")")"
+this_file="$(basename "$0")"
+
+cd "${this_dir}"
+
+sha256sum -c checklist.chk

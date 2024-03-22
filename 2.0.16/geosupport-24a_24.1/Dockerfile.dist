@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG VARIANT=@baseimage@
+ARG VARIANT=ubuntu:jammy
 FROM ${VARIANT} AS builder
 
 RUN set -ex \
@@ -19,7 +19,7 @@ RUN set -ex \
     && gcc -o message --static message.c \
     && rm message.c
 
-COPY @dcp_distfile@ ./geosupport.zip
+COPY geo24a_24.1.zip ./geosupport.zip
 COPY geo_h.patch ./geo_h.patch
 COPY geosupport.sh ./geosupport
 COPY geosupport.env ./geosupport.env
@@ -27,7 +27,7 @@ COPY geosupport.version ./version
 COPY checklist.sh ./checklist
 
 ENV CHECKSUM_FILE="checklist.chk"
-ENV GEOSUPPORT_FULLVERSION="@geosupport_fullversion@"
+ENV GEOSUPPORT_FULLVERSION="24a_24.1"
 
 RUN set -ex \
 # Extract the DCP zip file to /dist
@@ -65,12 +65,12 @@ RUN set -ex \
 
 FROM scratch
 
-LABEL com.digitalclash.gsd.image=@image_name@
-LABEL com.digitalclash.gsd.tag=@image_tag@-dist
-LABEL com.digitalclash.gsd.geosupport.major=@geosupport_major@
-LABEL com.digitalclash.gsd.geosupport.minor=@geosupport_minor@
-LABEL com.digitalclash.gsd.geosupport.patch=@geosupport_patch@
-LABEL com.digitalclash.gsd.geosupport.release=@geosupport_release@
+LABEL com.digitalclash.gsd.image=geosupport-docker
+LABEL com.digitalclash.gsd.tag=2.0.16-dist
+LABEL com.digitalclash.gsd.geosupport.major=24
+LABEL com.digitalclash.gsd.geosupport.minor=1
+LABEL com.digitalclash.gsd.geosupport.patch=
+LABEL com.digitalclash.gsd.geosupport.release=a
 
 COPY --from=builder /dist /dist
 
