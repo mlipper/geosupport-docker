@@ -140,7 +140,7 @@ These instructions assume you are using `bash` and your current working director
 1. If necessary, rename the downloaded `zip` file to follow the expected naming convention:
 
    ```sh
-   mv dist/geo@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@.zip dist/linux_geo@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@_@geosupport_minor@.zip
+   mv dist/geo@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@.zip dist/linux_geo@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@.zip
    ```
 
 1. Verify the configuration:
@@ -154,7 +154,7 @@ These instructions assume you are using `bash` and your current working director
    builddir                       build
    buildtimestamp                 Fri Apr 28 13:28:42 EDT 2023
    buildtz                        America/New_York
-   dcp_distfile                   linux_geo@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@_@geosupport_minor@.zip
+   dcp_distfile                   linux_geo@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@.zip
    distdir                        dist
    geosupport_basedir             /opt/geosupport
    geosupport_fullversion         @geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@
