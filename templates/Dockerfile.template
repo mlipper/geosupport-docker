@@ -9,7 +9,7 @@ LABEL com.digitalclash.gsd.geosupport.minor=@geosupport_minor@
 LABEL com.digitalclash.gsd.geosupport.patch=@geosupport_patch@
 LABEL com.digitalclash.gsd.geosupport.release=@geosupport_release@
 
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 
 WORKDIR @geosupport_basedir@
 
