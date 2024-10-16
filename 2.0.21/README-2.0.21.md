@@ -8,8 +8,6 @@ The latest news about this project.
 
 ### September 16, 2024
 
-**IMPORTANT**: this is a pre-release version! The final release date of 2.0.21 has not been scheduled yet.
-
 * **Version 2.0.21 available.** This release wraps `Geosupport 24c3_24.33`.
 
   **CHANGES:**
