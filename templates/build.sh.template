@@ -137,7 +137,7 @@ _fixVariant() {
 buildImage() {
     local image_string="$1"
     local file="$2"
-    docker build -t "${image_string}"  -f "${file}" .
+    docker build -t "${image_string}" --platform linux/amd64 -f "${file}" .
 }
 
 #
@@ -160,7 +160,7 @@ createVol() {
 exportDist() {
     local hostdir="$1"
     mkdir -p "${hostdir}"
-    docker build -t gsdexport:latest -<<EOF
+    docker build -t gsdexport:latest --platform linux/amd64 -<<EOF
 # syntax=docker/dockerfile:1
 FROM busybox:glibc
 RUN mkdir -p /xfer
