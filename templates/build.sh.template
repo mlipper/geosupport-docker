@@ -151,7 +151,7 @@ createVol() {
         die "Volume ${volname} already exists."
     fi
     docker volume create "${volname}"
-    docker run --rm --mount "source=${volname},target=${GEOSUPPORT_BASEDIR}"  "${image_string}" "/bin/true"
+    docker run --platform linux/amd64 --rm --mount "source=${volname},target=${GEOSUPPORT_BASEDIR}"  "${image_string}" "/bin/true"
 }
 
 #
@@ -169,7 +169,7 @@ COPY --from=${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-${DIST_VARIANT} \
         /dist/geosupport-${FULLVER}.tgz
 CMD ["cp", "-v", "/dist/geosupport-${FULLVER}.tgz", "/xfer"]
 EOF
-    docker run --rm -it --volume="${hostdir}:/xfer:rw" gsdexport:latest
+    docker run --platform linux/amd64 --rm -it --volume="${hostdir}:/xfer:rw" gsdexport:latest
     docker rmi gsdexport:latest
 }
 
