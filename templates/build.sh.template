@@ -151,7 +151,7 @@ createVol() {
         die "Volume ${volname} already exists."
     fi
     docker volume create "${volname}"
-    docker run --platform linux/amd64 --rm --mount "source=${volname},target=${GEOSUPPORT_BASEDIR}"  "${image_string}" "/bin/true"
+    docker run --platform linux/amd64 --rm --mount "type=volume,source=${volname},target=${GEOSUPPORT_BASEDIR}"  "${image_string}" "/bin/true"
 }
 
 #
