@@ -6,7 +6,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 The latest news about this project.
 
-### November 13, 2024
+### November 19, 2024
 
 #### **IMPORTANT**
 
