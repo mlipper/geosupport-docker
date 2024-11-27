@@ -123,6 +123,8 @@ geosupport_minor=11
 
 ## Building `geosupport-docker`
 
+_For building on a non-`amd64` machine, see section [Building On non-`amd64` Platforms](#building-on--non-amd64-platforms) below._
+
 This project is built using the `release.sh` script in the root project directory (`<project_dir>`).
 
 These instructions assume you are using `bash` and your current working directory is `<project_dir>`:
@@ -250,6 +252,20 @@ These instructions assume you are using `bash` and your current working director
      help          Show this usage message and exit.
 
    ```
+
+## Building On non-`amd64` Platforms
+
+If you are building this project on a non-`amd64` platform (e.g., macOS/Apple M-series chip: `arm64`), you may need to configure a new Docker `build driver` and update the `release.conf` file with it's name.
+
+Here's an example using this project's default build driver name, "container":
+
+```sh
+docker buildx create --name=container --driver=docker-container --use --bootstrap
+```
+
+If you use a different name, be sure to update the `release.conf` file property `builddrv_name`.
+
+See [Docker container build driver](https://docs.docker.com/build/builders/drivers/docker-container/) for more details.
 
 ## About Geosupport
 
