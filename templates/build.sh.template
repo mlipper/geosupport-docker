@@ -15,6 +15,7 @@ declare -a actions=()
 declare -a variants=()
 
 OUTDIR="$(readlink -vf ../out)"
+PLATFORM="$(uname -m)"
 DEFAULT_TAG="@image_tag@"
 DEFAULT_EXPORTDIR="${OUTDIR}/${DEFAULT_TAG}"
 DEFAULT_VARIANT=default
@@ -137,7 +138,11 @@ _fixVariant() {
 buildImage() {
     local image_string="$1"
     local file="$2"
-    docker build -t "${image_string}" --platform linux/amd64 -f "${file}" .
+    if [[ "${PLATFORM}" == "amd64" ]]; then
+        docker build -t "${image_string}" --platform=linux/amd64 -f "${file}" .
+    else
+        docker buildx build --builder=@builddrv_name@ --platform=linux/amd64 -t "${image_string}" -f "${file}" .
+    fi
 }
 
 #
@@ -151,7 +156,7 @@ createVol() {
         die "Volume ${volname} already exists."
     fi
     docker volume create "${volname}"
-    docker run --platform linux/amd64 --rm --mount "type=volume,source=${volname},target=${GEOSUPPORT_BASEDIR}"  "${image_string}" "/bin/true"
+    docker run --platform=linux/amd64 --rm --mount "type=volume,source=${volname},target=${GEOSUPPORT_BASEDIR}"  "${image_string}" "/bin/true"
 }
 
 #
@@ -160,7 +165,8 @@ createVol() {
 exportDist() {
     local hostdir="$1"
     mkdir -p "${hostdir}"
-    docker build -t gsdexport:latest --platform linux/amd64 -<<EOF
+    if [[ "${PLATFORM}" == "amd64" ]]; then
+        docker build --platform=linux/amd64 -t gsdexport:latest -<<EOF
 # syntax=docker/dockerfile:1
 FROM busybox:glibc
 RUN mkdir -p /xfer
@@ -169,7 +175,18 @@ COPY --from=${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-${DIST_VARIANT} \
         /dist/geosupport-${FULLVER}.tgz
 CMD ["cp", "-v", "/dist/geosupport-${FULLVER}.tgz", "/xfer"]
 EOF
-    docker run --platform linux/amd64 --rm -it --volume="${hostdir}:/xfer:rw" gsdexport:latest
+    else
+        docker buildx build --builder=@builddrv_name@ --platform=linux/amd64 -t gsdexport:latest -<<EOF
+# syntax=docker/dockerfile:1
+FROM busybox:glibc
+RUN mkdir -p /xfer
+COPY --from=${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-${DIST_VARIANT} \
+        /dist/geosupport.tgz \
+        /dist/geosupport-${FULLVER}.tgz
+CMD ["cp", "-v", "/dist/geosupport-${FULLVER}.tgz", "/xfer"]
+EOF
+    fi
+    docker run --platform=linux/amd64 --rm -it --volume="${hostdir}:/xfer:rw" gsdexport:latest
     docker rmi gsdexport:latest
 }
 
