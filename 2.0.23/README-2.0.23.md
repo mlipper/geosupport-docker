@@ -6,13 +6,13 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 The latest news about this project.
 
-### December 11, 2024
+### December 18, 2024
 
 * **Version 2.0.23 available.** This release wraps `Geosupport 24d1_24.41`.
 
-  Updates to NYPD precincts for certain areas.
+  Updates to NYPD precincts and sectors for certain areas.
 
   **CHANGES:**
 
   * NYPD precinct updates.
-  * Issue #
+  * `feaa4c47`: Fix for building on platforms other than `amd64` (e.g., `arm64`).
