@@ -13,5 +13,6 @@ The latest news about this project.
   **CHANGES:**
 
   * Congressional district changes that went into effect on January 1st, 2025.  
-  * [Build image on arm64 host #6](https://github.com/mlipper/geosupport-docker/issues/6) - WIP.
   * Add `--no-cache` switch to Docker `build` commands.
+  * Enchancement [Build image on arm64 host #6](https://github.com/mlipper/geosupport-docker/issues/6) - WIP.
+  * Bug [Generated build script broken on Intel Macs #7] - Fixed.
