@@ -4,7 +4,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 ## Latest Release
 
-**Version 2.0.23** [release notes](./2.0.23/README-2.0.23.md).
+**Version 2.0.24** [release notes](./2.0.24/README-2.0.24.md).
 
 ## Dockerfile.dist
 
@@ -255,12 +255,19 @@ These instructions assume you are using `bash` and your current working director
 
 ## Building on platforms other than `amd64`
 
+> **WARNING**: This is an experimental feature that is subject to change and may not work at all. 
+
 If you are building this project on a platform other than `amd64` (e.g., macOS/Apple M-series chip: `arm64`), you may need to configure a new Docker `build driver` and update the `release.conf` file with it's name.
 
-Here's an example using this project's default build driver name, "container":
+Here's an example using this project's default build driver name, "amd64-driver", and default build driver image option, "amd64/ubuntu":
 
 ```sh
-docker buildx create --name=container --driver=docker-container --use --bootstrap
+docker buildx create \
+--name=amd64-driver \
+--driver=docker-container \
+--driver-opt=image=amd64/ubuntu \
+--use \
+--bootstrap
 ```
 
 If you use a different name, be sure to update the `release.conf` file property `builddrv_name`.
