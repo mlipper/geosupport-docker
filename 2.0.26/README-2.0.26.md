@@ -4,15 +4,14 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 ## NEWS
 
-Geosupport `release 25a1`/`version 25.11` is tentatively scheduled for release on April 1st, 2025. According to DCP, this release contains the 2025 reapportionment of NYC election districts and other higher political districts.
+Version `2.0.26` is available from Docker Hub. For details about this and other versions, see `geosupport-docker`'s [Docker Hub registry](https://hub.docker.com/repository/docker/mlipper/geosupport-docker/general).
 
-This project's next release, `2.0.26`, wraps `Geosupport 25a1_25.11` and will be available on [Docker Hub](https://hub.docker.com/) later that week.
+This release wraps Geosupport `release 25a1`/`version 25.11` which, per DCP, contains the Board of Elections 2025 reapportionment of NYC election districts and other higher political districts.
 
-### March 11, 2025
+### April 3, 2025
 
 * **Version 2.0.26 available.** This release wraps `Geosupport 25a1_25.11`.
 
   **CHANGES:**
 
-  * Feature
-  * Issue #
+  * Feature: Geosuport - BOE 2025 reapportionment of NYC election districts and other higher political districts.
