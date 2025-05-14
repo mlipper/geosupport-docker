@@ -35,31 +35,47 @@ cat <<- EOF
     Usage: ${this_file} [OPTIONS] [ACTIONS]
 
     Options:
-      -h            Show this usage message and exit
-      -p string     Build property name and optional value.
+      --property=<name>[=<value>]  Build property name and optional value.
 
-                    This option is accepted in the following formats:
+                    --property=<name>=<value>
+                        Everything after the first occurance of the '='
+                        character (including other '=' characters) is
+                        considered the value.
+                        Surround the entire value with quotes
+                        if it contains spaces.
 
-                    -p <name>=<value>   # Everything after the first occurance of
-                                        # the '=' character (including other '='
-                                        # characters) is considered the value.
-                                        # Surround the entire value with quotes
-                                        # if it contains spaces.
+                    --property=<name>
+                        Property names cannot contain spaces. The value
+                        will be defaulted to <name>.
 
-                    -p <name>           # Property names cannot contain spaces.
-                                        # The value will be defaulted to <name>.
-
-                    The '-p' option may be specified multiple times on a commandline.
+                    The '--property' option may be specified multiple times.
 
     Actions:
+      build         Runs "${BUILD_DIR}/build.sh build [--latest][--variant=<dist|default>]"
+
       clean         Remove the local build directory.
 
+      createvol     Runs "${BUILD_DIR}/build.sh createvol [--volname=<name>]"
+
+      exportdist    Runs "${BUILD_DIR}/build.sh exportdist [--exportdir=<path>]"
+
       generate      Generate project source using *.template files release.conf.
+
+      help          Show this usage message and exit
+
+      helpbuild     Show the usage message for ${BUILD_DIR}/build.sh and exit.
 
       release       Create a new release folder and populate it with relevant
                     build artifacts.
 
       show          Print build properties and their values, sorted, to stdout.
+    
+    Notes:
+      Actions which invoke the "${BUILD_DIR}/build.sh" script behave as follows:
+                    - Fails if the "generate" command from this script hasn't been run.
+                    - Accept the same arguments as the actions in the target script.
+      Use "helpbuild" from this script to see the usage of build.sh.
+      If all else fails, run "${BUILD_DIR}/build.sh" directly.
 
 EOF
 }
@@ -286,43 +302,32 @@ main() {
     # also exist in the file.
     _init_confmap release.conf
 
-    while [ $# -gt 0 ]; do
-        # Necessary!
-        OPTIND=1
-        while getopts "hp:" opt; do
-            case "${opt}" in
-            h)
-                usage
-                exit 0
-                ;;
-            p)
-                # TODO: Error handling
-                prop="${OPTARG}"
-                k="${prop%%=*}"
-                v="${prop#*=}"
-                _setc "${k}" "${v:-true}"
-                ;;
-            \?)
-                echo "Invalid Option: -$OPTARG" 1>&2
-                exit 1
-                ;;
-            :)
-                echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-                exit 1
-                ;;
-            esac
-        done
+    local variant=
+    local latest=
+    local volname=
+    local exportdir=
 
-        # Remove already processed arguments
-        shift "$((OPTIND-1))"
+    while [ $# -gt 0 ]; do
 
         # Access remaining positional parameters.
         case "$1" in
+            build)
+                actions+=( "build" ); shift
+                ;;
             clean)
                 actions+=( "clean" ); shift
                 ;;
+            createvol)
+                actions+=( "createvol" ); shift
+                ;;
+            exportdist)
+                actions+=( "exportdist" ); shift
+                ;;
             generate)
                 actions+=( "generate" ); shift
+                ;;
+            help)
+                usage | more && exit 0;
                 ;;
             release)
                 actions+=( "release" ); shift
@@ -330,8 +335,30 @@ main() {
             show)
                 actions+=( "show" ); shift
                 ;;
+            --property=*)
+                local prop="${1##--property=}"
+                local k="${prop%%=*}"
+                local v="${prop#*=}"
+                _setc "${k}" "${v:-true}"
+                shift
+                ;;
+            --variant=*)
+                variant="$1"; shift
+                ;;
+            --latest)
+                latest="$1"; shift
+                ;;
+            --volname=*)
+                volname="$1"; shift
+                ;;
+            --exportdir=*)
+                exportdir="$1"; shift
+                ;;
             "")
                 die "Missing command"; shift
+                ;;
+            --*)
+                die "Invalid option: $1"; shift
                 ;;
             *)
                 die "Invalid command: $1"; shift
@@ -346,8 +373,17 @@ main() {
 
     for action in "${actions[@]}"; do
         case "${action}" in
+            build)
+                "${BUILD_DIR}"/build.sh build "${latest}" "${variant}"
+                ;;
             clean)
                 clean ;;
+            createvol)
+                "${BUILD_DIR}"/build.sh createvol "${volname}"
+                ;;
+            exportdist)
+                "${BUILD_DIR}"/build.sh exportdist "${exportdir}"
+                ;;
             generate)
                 generate ;;
             release)
