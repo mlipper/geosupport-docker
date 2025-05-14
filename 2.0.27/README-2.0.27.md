@@ -33,4 +33,4 @@ See [Upcoming Changes to Hosted Geoclient Services](https://mlipper.github.io/ge
   **CHANGES:**
 
   * Feature
-  * Issue #
+  * Issue #8 - "Add pass-through actions to release.sh for calling build.sh." implemented.
