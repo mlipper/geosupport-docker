@@ -57,6 +57,8 @@ cat <<- EOF
 
       createvol     Runs "${BUILD_DIR}/build.sh createvol [--volname=<name>]"
 
+      custombasedir Runs ${BUILD_DIR}/custombasedir.sh with no arguments.
+
       exportdist    Runs "${BUILD_DIR}/build.sh exportdist [--exportdir=<path>]"
 
       generate      Generate project source using *.template files release.conf.
@@ -71,11 +73,19 @@ cat <<- EOF
       show          Print build properties and their values, sorted, to stdout.
     
     Notes:
-      Actions which invoke the "${BUILD_DIR}/build.sh" script behave as follows:
-                    - Fails if the "generate" command from this script hasn't been run.
-                    - Accept the same arguments as the actions in the target script.
-      Use "helpbuild" from this script to see the usage of build.sh.
+      Actions which invoke the "${BUILD_DIR}/build.sh" script behave as
+      follows:
+                    Fails if the 'generate' command from this script hasn't
+                    been run.
+                    Accepts the same arguments as the actions in the
+                    target script.
+
+      Use 'helpbuild' from this script to see the usage of build.sh.
       If all else fails, run "${BUILD_DIR}/build.sh" directly.
+
+      For information on the custombasedir action see the comments at the top
+      of file:
+      "${BUILD_DIR}/custombasedir.sh"
 
 EOF
 }
@@ -320,6 +330,9 @@ main() {
             createvol)
                 actions+=( "createvol" ); shift
                 ;;
+            custombasedir)
+                actions+=( "custombasedir" ); shift
+                ;;
             exportdist)
                 actions+=( "exportdist" ); shift
                 ;;
@@ -327,7 +340,10 @@ main() {
                 actions+=( "generate" ); shift
                 ;;
             help)
-                usage | more && exit 0;
+                actions+=( "help" ); shift
+                ;;
+            helpbuild)
+                actions+=( "helpbuild" ); shift
                 ;;
             release)
                 actions+=( "release" ); shift
@@ -371,21 +387,41 @@ main() {
 
     BUILD_DIR="$(_getc builddir)"
 
+    local build_exists=
+    [[ -f "${BUILD_DIR}/build.sh" ]] && build_exists="true"
+
     for action in "${actions[@]}"; do
         case "${action}" in
             build)
+                [[ -z "${build_exists}" ]] &&
+                    die "[ERROR] Must run 'generate' before running 'build'.";
                 "${BUILD_DIR}"/build.sh build "${latest}" "${variant}"
                 ;;
             clean)
                 clean ;;
             createvol)
+                [[ -z "${build_exists}" ]] &&
+                    die "[ERROR] Must run 'generate' before running 'createvol'.";
                 "${BUILD_DIR}"/build.sh createvol "${volname}"
                 ;;
+            custombasedir)
+                [[ -z "${build_exists}" ]] &&
+                    die "[ERROR] Must run 'generate' before running 'custombasedir'.";
+                "${BUILD_DIR}"/custombasedir.sh
+                ;;
             exportdist)
+                [[ -z "${build_exists}" ]] &&
+                    die "[ERROR] Must run 'generate' before running 'exportdist'.";
                 "${BUILD_DIR}"/build.sh exportdist "${exportdir}"
                 ;;
             generate)
                 generate ;;
+            help)
+                usage | more && exit 0;
+                ;;
+            helpbuild)
+                "${BUILD_DIR}"/build.sh help;
+                ;;
             release)
                 release ;;
             show)
