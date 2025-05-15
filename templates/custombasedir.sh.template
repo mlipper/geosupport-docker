@@ -1,127 +1,158 @@
 #!/usr/bin/env bash
 
-#
-# Customize the path of the GEOSUPPORT_BASEDIR directory used to install
-# and configure Geosupport.
-#
-# Before running this script, the distribution must be generated using the
-# desired release configuration. E.g.,
-#
-#   # 1. Edit <PROJECTDIR>/release.conf as needed.
-#   # 2. In a bash shell, change to the root project directory.
-#   cd <PROJECTDIR>
-#   # 3. Clean and regenerate the build script.
-#   ./release.sh clean generate
-#   # 4. Build the distribution.
-#   ./build/build.sh build
-#   # 5. Export the distribution from the image/container to the local filesystem.
-#   ./build/build.sh exportdist
-#   # 6. Run this script.
-#        (Adjust the path of the CUSTOMDIR global, first, if needed)
-#   ./build/custombasedir.sh
-#
-# By default, GEOSUPPORT_BASEDIR is set to path "@geosupport_basedir@".
-# This script uses the value of global variable CUSTOMDIR which, for
-# now, is hardcoded with path "/gis/geosupport/server".
-#
-# The following files from the generated distribution's bin directory are
-# modified:
-#
-#   version-@geosupport_fullversion@/bin/geosupport.env
-#   version-@geosupport_fullversion@/bin/geosupport
-#
-# It is assumed that the default generated distribution is here:
-#
-#   <PROJECTDIR>/out/@image_tag@/geosupport-@geosupport_fullversion@.tgz
-#
-# If this script completes successfully, the customized distribution will
-# be here:
-#
-#   <PROJECTDIR>/out/@image_tag@/geosupport-server-@geosupport_fullversion@.tgz
-#
-
 set -Eeuo pipefail
+
+this_dir="$(dirname "$(readlink -vf "$BASH_SOURCE")")"
+this_file="$(basename "$0")"
+
+cd "${this_dir}"
 
 #
 # Globals
 #
 
 VERSION="@image_tag@"
-
-cd "$(dirname "$(readlink -vf "$BASH_SOURCE")")/.."
 PROJECTDIR="$(pwd)"
-
 DOCKERDIR=/opt/geosupport
-
 declare -a FILES=()
 FILES=( geosupport geosupport.env )
-
 CUSTOMDIR=/gis/geosupport/server
-
 GOAT_VERSION="@geosupport_fullversion@"
-
 OUTDIR="${PROJECTDIR}/out/${VERSION}"
-
 OUTFILE="${OUTDIR}/geosupport-server-${GOAT_VERSION}.tgz"
-
 WORKDIR="${PROJECTDIR}/temp"
-
 SRCDIR="${WORKDIR}/${VERSION}"
 
-_die() {
+dexists() {
+  [[ -d "$1" ]] || die "Directory $1 does not exist."
+}
+
+die() {
   echo "[ERROR] $1"
   exit 1
 }
 
-_dexists() {
-  [[ -d "$1" ]] || _die "Directory $1 does not exist."
+compress() {
+  mkdir -p "${SRCDIR}" \
+    && dexists "${SRCDIR}" \
+    && cd "${SRCDIR}"
+  fexists "${OUTDIR}/geosupport-${GOAT_VERSION}.tgz" \
+    && tar xzvf "${OUTDIR}/geosupport-${GOAT_VERSION}.tgz"
+  for f in "${FILES[@]}"; do
+    srcfile="${SRCDIR}/version-${GOAT_VERSION}/bin/${f}"
+    fexists "${srcfile}"
+    #
+    # sed usage notes:
+    #
+    #   '-i.orig' backs up original files before in-place substitution
+    #   Use '_' as a delimitter since the pattern contains '/'
+    #   'g' global line match
+    #
+    echo "[INFO] -> sed -i.orig "s_${DOCKERDIR}_${CUSTOMDIR}_g" "${srcfile}""
+    sed -i.orig "s_${DOCKERDIR}_${CUSTOMDIR}_g" "${srcfile}"
+    echo "[INFO] -> mv "${srcfile}.orig" "${WORKDIR}""
+    mv "${srcfile}.orig" "${WORKDIR}"
+  done
+  echo "[INFO] -> tar czvf "${OUTFILE}" -C "${SRCDIR}" "version-${GOAT_VERSION}""
+  tar czvf "${OUTFILE}" -C "${SRCDIR}" "version-${GOAT_VERSION}" \
+      || die "Could not create ${OUTFILE}."
+  # rm -rf "${WORKDIR}" \
+  #     || die "Could not remove ${WORKDIR}."
+  echo "[INFO] done."
 }
 
-_fexists() {
-  [[ -f "$1" ]] || _die "File $1 does not exist."
+fexists() {
+  [[ -f "$1" ]] || die "File $1 does not exist."
 }
 
-echo "[INFO]"
-echo "[INFO]    CUSTOMDIR: ${CUSTOMDIR}"
-echo "[INFO] GOAT_VERSION: ${GOAT_VERSION}"
-echo "[INFO]       OUTDIR: ${OUTDIR}"
-echo "[INFO]      OUTFILE: ${OUTFILE}"
-echo "[INFO]   PROJECTDIR: ${PROJECTDIR}"
-echo "[INFO]       SRCDIR: ${SRCDIR}"
-echo "[INFO]      VERSION: ${VERSION}"
-echo "[INFO]      WORKDIR: ${WORKDIR}"
-echo "[INFO]"
+main() {
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            help)
+                usage | more && exit 0;
+                ;;
+            show)
+                show && exit 0;
+                ;;
+            --path=*)
+                CUSTOMDIR="${1##--path=}"; shift
+                ;;
+            --*)
+                die "Invalid option: $1"; shift
+                ;;
+            *)
+                compress
+                ;;
+        esac
+    done
+}
 
-mkdir -p "${SRCDIR}" \
-  && _dexists "${SRCDIR}" \
-  && cd "${SRCDIR}"
+show() {
+cat <<- EOF
+   CUSTOMDIR: ${CUSTOMDIR}
+GOAT_VERSION: ${GOAT_VERSION}
+      OUTDIR: ${OUTDIR}
+     OUTFILE: ${OUTFILE}
+  PROJECTDIR: ${PROJECTDIR}
+      SRCDIR: ${SRCDIR}
+     VERSION: ${VERSION}
+     WORKDIR: ${WORKDIR}
 
-_fexists "${OUTDIR}/geosupport-${GOAT_VERSION}.tgz" \
-  && tar xzvf "${OUTDIR}/geosupport-${GOAT_VERSION}.tgz"
+EOF
+}
 
-for f in "${FILES[@]}"; do
-  srcfile="${SRCDIR}/version-${GOAT_VERSION}/bin/${f}"
-  _fexists "${srcfile}"
+usage() {
+cat <<- EOF
+  Customize the path of the GEOSUPPORT_BASEDIR directory used to install
+  and configure Geosupport.
 
-  #
-  # sed usage notes:
-  #
-  #   '-i.orig' backs up original files before in-place substitution
-  #   Use '_' as a delimitter since the pattern contains '/'
-  #   'g' global line match
-  #
-  echo "[INFO] -> sed -i.orig "s_${DOCKERDIR}_${CUSTOMDIR}_g" "${srcfile}""
-  sed -i.orig "s_${DOCKERDIR}_${CUSTOMDIR}_g" "${srcfile}"
-  echo "[INFO] -> mv "${srcfile}.orig" "${WORKDIR}""
-  mv "${srcfile}.orig" "${WORKDIR}"
-done
+  Usage: ${this_file} [help]
+    <<no arguments>>  Creates a tgz file with the Geosupport Linux
+                      distribution using the default value of the
+                      CUSTOMDIR global for the install path:
+                      ${CUSTOMDIR}
 
-echo "[INFO] -> tar czvf "${OUTFILE}" -C "${SRCDIR}" "version-${GOAT_VERSION}""
+    help              Show this usage message and exit
 
-tar czvf "${OUTFILE}" -C "${SRCDIR}" "version-${GOAT_VERSION}" \
-    || _die "Could not create ${OUTFILE}."
+  Options:
+    --path=<path>     Absolute path for CUSTOMDIR (GEOSUPPORT_BASEDIR).
+                      If not given, defaults to ${CUSTOMDIR}.
 
-# rm -rf "${WORKDIR}" \
-#     || _die "Could not remove ${WORKDIR}."
+  Notes:
+    Before running this script, the distribution must be generated using
+    the desired release configuration. E.g.,
+    1. Edit ${PROJECTDIR}/release.conf as needed.
+    2. In a bash shell, change to the root project directory.
+        cd ${PROJECTDIR}
+    3. Clean and regenerate the build script.
+        ./release.sh clean generate
+    4. Build the distribution.
+        ./build/build.sh build
+    5. Export the distribution from the image/container to the local filesystem.
+        ./build/build.sh exportdist
+    6. Run this script.
+        (Adjust the path of the CUSTOMDIR global, first, if needed)
+        ./build/custombasedir.sh
 
-echo "[INFO] done."
+  Normally, the installation path for Geosupport (GEOSUPPORT_BASEDIR) is
+  set to '/opt/geosupport'.
+
+  This script uses the value of global variable CUSTOMDIR which, by default,
+  is set to '/gis/geosupport/server'.
+
+  The following files from the generated distribution's bin directory are
+  modified:
+    version-@geosupport_fullversion@/bin/geosupport.env
+    version-@geosupport_fullversion@/bin/geosupport
+
+  It is assumed that the default generated distribution is here:
+    ${PROJECTDIR}/out/${VERSION}/geosupport-@geosupport_fullversion@
+
+  If this script completes successfully, the customized distribution will
+  be here:
+    ${PROJECTDIR}/out/${VERSION}/geosupport-server-@geosupport_fullversion@
+
+EOF
+}
+
+main "$@"

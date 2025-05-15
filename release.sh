@@ -57,7 +57,7 @@ cat <<- EOF
 
       createvol     Runs "${BUILD_DIR}/build.sh createvol [--volname=<name>]"
 
-      custombasedir Runs ${BUILD_DIR}/custombasedir.sh with no arguments.
+      custombasedir Runs ${BUILD_DIR}/custombasedir.sh [--path=<path>]
 
       exportdist    Runs "${BUILD_DIR}/build.sh exportdist [--exportdir=<path>]"
 
@@ -66,6 +66,8 @@ cat <<- EOF
       help          Show this usage message and exit
 
       helpbuild     Show the usage message for ${BUILD_DIR}/build.sh and exit.
+
+      helpcustom    Show the usage message for ${BUILD_DIR}/custombasedir.sh and exit.
 
       release       Create a new release folder and populate it with relevant
                     build artifacts.
@@ -316,6 +318,7 @@ main() {
     local latest=
     local volname=
     local exportdir=
+    local path=
 
     while [ $# -gt 0 ]; do
 
@@ -345,6 +348,9 @@ main() {
             helpbuild)
                 actions+=( "helpbuild" ); shift
                 ;;
+            helpcustom)
+                actions+=( "helpcustom" ); shift
+                ;;
             release)
                 actions+=( "release" ); shift
                 ;;
@@ -369,6 +375,9 @@ main() {
                 ;;
             --exportdir=*)
                 exportdir="$1"; shift
+                ;;
+            --path=*)
+                path="$1"; shift
                 ;;
             "")
                 die "Missing command"; shift
@@ -407,7 +416,7 @@ main() {
             custombasedir)
                 [[ -z "${build_exists}" ]] &&
                     die "[ERROR] Must run 'generate' before running 'custombasedir'.";
-                "${BUILD_DIR}"/custombasedir.sh
+                "${BUILD_DIR}"/custombasedir.sh "${path}"
                 ;;
             exportdist)
                 [[ -z "${build_exists}" ]] &&
@@ -420,7 +429,14 @@ main() {
                 usage | more && exit 0;
                 ;;
             helpbuild)
+                [[ -z "${build_exists}" ]] &&
+                    die "[ERROR] Must run 'generate' before running 'helpbuild'.";
                 "${BUILD_DIR}"/build.sh help;
+                ;;
+            helpcustom)
+                [[ -z "${build_exists}" ]] &&
+                    die "[ERROR] Must run 'generate' before running 'helpcustom'.";
+                "${BUILD_DIR}"/custombasedir.sh help;
                 ;;
             release)
                 release ;;
