@@ -399,12 +399,16 @@ main() {
     local build_exists=
     [[ -f "${BUILD_DIR}/build.sh" ]] && build_exists="true"
 
+    local build_args=()
     for action in "${actions[@]}"; do
         case "${action}" in
             build)
                 [[ -z "${build_exists}" ]] &&
                     die "[ERROR] Must run 'generate' before running 'build'.";
-                "${BUILD_DIR}"/build.sh build "${latest}" "${variant}"
+                [[ -n "${variant}" ]] && build_args+=( "${variant##--variant=}" )
+                [[ -n "${latest}" ]] && build_args+=( "--latest" )
+                echo "Running build with ${build_args[*]}"
+                "${BUILD_DIR}"/build.sh build "${build_args[@]}"
                 ;;
             clean)
                 clean ;;
@@ -421,7 +425,7 @@ main() {
             exportdist)
                 [[ -z "${build_exists}" ]] &&
                     die "[ERROR] Must run 'generate' before running 'exportdist'.";
-                "${BUILD_DIR}"/build.sh exportdist "${exportdir}"
+                    "${BUILD_DIR}"/build.sh exportdist "${exportdir}"
                 ;;
             generate)
                 generate ;;

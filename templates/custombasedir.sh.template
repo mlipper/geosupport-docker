@@ -5,7 +5,7 @@ set -Eeuo pipefail
 this_dir="$(dirname "$(readlink -vf "$BASH_SOURCE")")"
 this_file="$(basename "$0")"
 
-cd "${this_dir}"
+cd "${this_dir}/.."
 
 #
 # Globals
@@ -81,7 +81,7 @@ main() {
                 die "Invalid option: $1"; shift
                 ;;
             *)
-                compress
+                compress; shift
                 ;;
         esac
     done
