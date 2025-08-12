@@ -9,7 +9,8 @@ The latest news about this project.
 ### August 18, 2025
 
 * **Version 2.0.28 available.** This release wraps `Geosupport 25c_25.3`.
+* The Department of City Planning provides detailed information about this release in the [Geosupport System User Bulletin](https://www.nyc.gov/content/planning/pages/resources/geocoding/geosupport-desktop-edition).
 
-  **CHANGES:**
+  **Bug Fixes:**
 
-  * [Issue #9](https://github.com/mlipper/geosupport-docker/issues/9)
+  * Fix release script bugs introduced in 2.0.27 [#9](https://github.com/mlipper/geosupport-docker/issues/9).
