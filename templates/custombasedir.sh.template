@@ -81,10 +81,12 @@ main() {
                 die "Invalid option: $1"; shift
                 ;;
             *)
-                compress; shift
+                echo "Ignoring unkown argument: $1"; shift
                 ;;
         esac
     done
+    compress \
+        || die "Could not compress the Geosupport distribution with CUSTOMDIR=${CUSTOMDIR}."
 }
 
 show() {

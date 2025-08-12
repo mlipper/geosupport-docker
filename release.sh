@@ -420,12 +420,22 @@ main() {
             custombasedir)
                 [[ -z "${build_exists}" ]] &&
                     die "[ERROR] Must run 'generate' before running 'custombasedir'.";
-                "${BUILD_DIR}"/custombasedir.sh "${path}"
+                if [[ -n "${path}" ]]; then
+                    echo "Running custombasedir with path: ${path}"
+                    "${BUILD_DIR}"/custombasedir.sh --path="${path}"
+                else
+                    echo "Running custombasedir with default path."
+                    "${BUILD_DIR}"/custombasedir.sh
+                fi
                 ;;
             exportdist)
                 [[ -z "${build_exists}" ]] &&
                     die "[ERROR] Must run 'generate' before running 'exportdist'.";
-                    "${BUILD_DIR}"/build.sh exportdist "${exportdir}"
+                    if [[ -n "${exportdir}" ]]; then
+                        "${BUILD_DIR}"/build.sh exportdist --exportdir="${exportdir}"
+                    else
+                        "${BUILD_DIR}"/build.sh exportdist
+                    fi
                 ;;
             generate)
                 generate ;;
