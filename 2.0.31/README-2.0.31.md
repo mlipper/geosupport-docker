@@ -1,4 +1,4 @@
-# geosupport-docker v@release_majorminor@
+# geosupport-docker v2.0
 
 Dockerfiles for installing, configuring and using the NYC Department of City Planning's Geosupport application from a Docker container.
 
@@ -6,12 +6,7 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 The latest news about this project.
 
-### @release_date@
+### April 1, 2026
 
-* **Version @image_tag@ available.** This release wraps `Geosupport @geosupport_fullversion@`.
+* **Version 2.0.31 available.** This release wraps `Geosupport 26a1_26.1`.
 * The Department of City Planning provides detailed information about this release in the [Geosupport System User Bulletin](https://www.nyc.gov/content/planning/pages/resources/geocoding/geosupport-desktop-edition).
-
-  **CHANGES:**
-
-  * Feature
-  * Issue #
