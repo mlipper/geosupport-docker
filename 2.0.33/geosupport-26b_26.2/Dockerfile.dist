@@ -19,7 +19,7 @@ RUN set -ex \
     && gcc -o message --static message.c \
     && rm message.c
 
-COPY geo26a2_26.1.zip ./geosupport.zip
+COPY geo26b_26.2.zip ./geosupport.zip
 COPY geo_h.patch ./geo_h.patch
 COPY geosupport.sh ./geosupport
 COPY geosupport.env ./geosupport.env
@@ -27,7 +27,7 @@ COPY geosupport.version ./version
 COPY checklist.sh ./checklist
 
 ENV CHECKSUM_FILE="checklist.chk"
-ENV GEOSUPPORT_FULLVERSION="26a2_26.1"
+ENV GEOSUPPORT_FULLVERSION="26b_26.2"
 
 RUN set -ex \
 # Extract the DCP zip file to /dist
@@ -68,9 +68,9 @@ FROM scratch
 LABEL com.digitalclash.gsd.image=geosupport-docker
 LABEL com.digitalclash.gsd.tag=2.0.33-dist
 LABEL com.digitalclash.gsd.geosupport.major=26
-LABEL com.digitalclash.gsd.geosupport.minor=1
-LABEL com.digitalclash.gsd.geosupport.patch=2
-LABEL com.digitalclash.gsd.geosupport.release=a
+LABEL com.digitalclash.gsd.geosupport.minor=2
+LABEL com.digitalclash.gsd.geosupport.patch=
+LABEL com.digitalclash.gsd.geosupport.release=b
 
 COPY --from=builder /dist /dist
 

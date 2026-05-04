@@ -5,9 +5,9 @@ FROM ${VARIANT}
 LABEL com.digitalclash.gsd.image=geosupport-docker
 LABEL com.digitalclash.gsd.tag=2.0.33
 LABEL com.digitalclash.gsd.geosupport.major=26
-LABEL com.digitalclash.gsd.geosupport.minor=1
-LABEL com.digitalclash.gsd.geosupport.patch=2
-LABEL com.digitalclash.gsd.geosupport.release=a
+LABEL com.digitalclash.gsd.geosupport.minor=2
+LABEL com.digitalclash.gsd.geosupport.patch=
+LABEL com.digitalclash.gsd.geosupport.release=b
 
 ENV LANG=C.UTF-8
 
@@ -17,7 +17,7 @@ COPY --from=mlipper/geosupport-docker:2.0.33-dist /dist/geosupport.tgz /opt/geos
 
 RUN set -eux \
   && tar xzvf /opt/geosupport/geosupport.tgz \
-  && /opt/geosupport/version-26a2_26.1/bin/geosupport install \
+  && /opt/geosupport/version-26b_26.2/bin/geosupport install \
   && rm /opt/geosupport/geosupport.tgz
 
 CMD ["geosupport", "version"]

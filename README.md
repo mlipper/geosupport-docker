@@ -57,19 +57,19 @@ However, the most common usage of this `Dockerfile` is for creating a volume con
 
 ```sh
 # Create a named volume using the Docker CLI
-$ docker volume create geosupport-23c_23.3
-geosupport-23c_23.3
+$ docker volume create geosupport-26b_26.2
+geosupport-26b_26.2
 
 # Populate the volume with the contents of GEOSUPPORT_BASE (replace the default CMD with a simple no-op command)
-$ docker run -it --rm --mount source=geosupport-23c_23.3,target=/opt/geosupport geosupport-docker:latest /bin/true
+$ docker run -it --rm --mount source=geosupport-26b_26.2,target=/opt/geosupport geosupport-docker:latest /bin/true
 
 # Run an interactive bash shell in a new container to test the named volume
-$ docker run -it --rm --mount source=geosupport-23c_23.3,target=/opt/geosupport ubuntu:jammy bash
+$ docker run -it --rm --mount source=geosupport-26b_26.2,target=/opt/geosupport ubuntu:jammy bash
 root@fc1d63c26dca# cd /opt/geosupport
 root@fc1d63c26dca# ls -l
 total 4
-lrwxrwxrwx 1 root root   18 Nov 21 18:20 current -> version-23c_23.3
-drwxr-xr-x 6 root root 4096 Nov 21 18:55 version-23c_23.3
+lrwxrwxrwx 1 root root   18 Nov 21 18:20 current -> version-26b_26.2
+drwxr-xr-x 6 root root 4096 Nov 21 18:55 version-26b_26.2
 ```
 
 ### About Geosupport Versions
@@ -125,137 +125,195 @@ geosupport_minor=11
 
 _For building these images on an architecture other than `amd64`, see section [Building on platforms other than `amd64`](#building-on-platforms-other-than-amd64) below._
 
-This project is built using the `release.sh` script in the root project directory (`<project_dir>`).
+This project is built using the `release.sh` script in the root project directory (`<project_dir>`). Most of the real work happens in other scripts which are built from templates in the `<project_dir>/templates` directory and generated to the `<project_dir>/build` directory.
 
-These instructions assume you are using `bash` and your current working directory is `<project_dir>`:
+**NOTE**: All build instructions that follow assume you are using `bash` and your current working directory is `<project_dir>` unless otherwise noted.
 
-1. Configure `release.conf` with the correct Geosupport version information. See section "About Geosupport Versions" above for details.
+### Build Summary
 
-1. Create the `dist` directory:
+Some build steps rely on the output of previous steps and must be built in a specifc order which will be noted. Some steps are not required to push built images to a registry and will marked optional.
+
+| Step | Action                                                                                   | Dependencies | Required |
+| ---- | ---------------------------------------------------------------------------------------- | ------------ | -------- |
+| 1.   | Put the new Geosupport distribution in the `<project_dir>/dist` directory.               |              | true     |
+| 2.   | Configure `<project_dir>/release.conf`.                                                  | step 1.      | true     |
+| 3.   | Clean and regenerate the build script.                                                   | step 2.      | true     |
+| 4.   | Build the distribution.                                                                  | step 3.      | true     |
+| 5.   | Generate a new project release folder.                                                   | step 4.      | true     |
+| 6.   | Create a volume.                                                                         | step 4.      | false    |
+| 7.   | Export the distribution from the image/container to a compressed file on the filesystem. | step 4.      | false    |
+| 8.   | Create a custom distribution and export it to a compressed file on the filesystem.       | step 7.      | false    |
+
+### Build Details
+
+1. **STEP 1.** - Put the new Geosupport distribution in the `<project_dir>/dist` directory:
+   1. Create the `dist` directory if necessary:
+
+      ```sh
+      mkdir -p dist
+      ```
+
+   2. Download the Linux distribution of Geosupport from the Department of City Planning's [Open Data](https://www1.nyc.gov/site/planning/data-maps/open-data.page#geocoding_application) page into the `dist` directory.
+   3. If necessary, rename the downloaded `zip` file to follow the expected naming convention `geo<release_version>.zip`. The convention is that all alphabetic characters are lowercase. For example, building Geosupport release 26b and version 26.2:
+
+      ```sh
+      mv dist/foo-GEO26B-26.2 dist/geo26b_26.2.zip
+      ```
+
+2. **STEP 2.** - Configure `<project_dir>/release.conf`:
+   1. Update the Geosupport version information. See section [About Geosupport Versions](#about-geosupport-versions) above for details.
+   2. Update the version of this project.
+
+   **IMPORTANT**: Every new Geosupport version or alteration requires a new version of this project before it is pushed to a remote registry.
+
+3. Clean and regenerate the build script:
 
    ```sh
-   mkdir -p dist
+   $ ./release.sh clean generate
+   2026-05-03 13:27:55 [CLEAN] Removing build directory build...
+   2026-05-03 13:27:55 [CLEAN] Build directory build removed.
+   2026-05-03 13:27:55 [GENERATE] Generating source files from templates...
+   2026-05-03 13:27:56 [GENERATE] Source file generation complete.
    ```
 
-1. Download the Linux distribution of Geosupport from the Department of City Planning's [Open Data](https://www1.nyc.gov/site/planning/data-maps/open-data.page#geocoding_application) page into the `dist` directory.
-
-1. If necessary, rename the downloaded `zip` file to follow the expected naming convention:
-
-   ```sh
-   mv dist/geo23c_23.3.zip dist/linux_geo23c_23_3.zip
-   ```
-
-1. Verify the configuration:
+   Verify the configuration:
 
    ```sh
    $ ./release.sh show
 
    Property                       Value
    ------------------------------ ----------------------------------------
-   baseimage                      ubuntu:jammy
+   baseimage                      ubuntu:noble
    builddir                       build
-   buildtimestamp                 Fri Apr 28 13:28:42 EDT 2023
+   builddrv_name                  amd64-driver
+   buildtimestamp                 Sun May  3 13:51:05 EDT 2026
    buildtz                        America/New_York
-   dcp_distfile                   linux_geo23c_23_3.zip
+   dcp_distfile                   geo26b_26.2.zip
    distdir                        dist
    geosupport_basedir             /opt/geosupport
-   geosupport_fullversion         23c_23.3
-   geosupport_major               23
+   geosupport_fullversion         26b_26.2
+   geosupport_major               26
    geosupport_minor               2
    geosupport_patch
    geosupport_release             b
    image_name                     geosupport-docker
-   image_tag                      2.0.12
+   image_tag                      2.0.33
+   release_date                   May 03, 2026
+   release_majorminor             2.0
    repo_name                      mlipper
-   vcs_ref                        e3c2622
 
    Actions
    ------------------------------
    show
    ```
 
-1. Generate a clean build:
+4. **STEP 4.** - Build the distribution:
 
-   ```sh
-   $ ./release.sh clean generate
-   2022-12-21 14:43:28 [CLEAN] Removing build directory build...
-   2022-12-21 14:43:28 [CLEAN] Build directory build removed.
-   2022-12-21 14:43:28 [GENERATE] Generating source files from templates...
-   2022-12-21 14:43:29 [GENERATE] Source file generation complete.
-   ```
+   1. Review usage of the generated build script in the `build` directory:
 
-1. Review usage of the generated build script in the `build` directory:
+      ```bash
+      ./release.sh helpbuild
+      ```
 
-   ```bash
-   build/build.sh help
-   ```
+      **NOTE**: This is equivalent to running the help command directly using the generated build/build.sh file.
 
-   ```man
+      ```man
 
-   Usage: build.sh COMMAND [OPTIONS]
+      Usage: build.sh COMMAND [OPTIONS]
 
-   Build images, create or export volumes for mlipper/geosupport-docker v2.0.12.
+      Build images, create or export volumes for mlipper/geosupport-docker v2.0.33.
 
-   Commands:
+      Commands:
 
-     build         Builds image version 2.0.12 of mlipper/geosupport-docker.
+      build         Builds image version 2.0.33 of mlipper/geosupport-docker.
 
-       Options:    --variant=<name> (optional)
+         Options:    --variant=<name> (optional)
 
-                   Specifies that only variant "<name>" be built.
+                     Specifies that only variant "<name>" be built.
 
-                   If the --variant option has not been given, both are built.
-                   Builds are always done against the local repository.
+                     If the --variant option has not been given, both are built.
+                     Builds are always done against the local repository.
 
-                   --variant=dist
-                   Builds image mlipper/geosupport-docker:2.0.12-dist
+                     --variant=dist
+                     Builds image mlipper/geosupport-docker:2.0.33-dist
 
-                   --variant=default
-                   Builds image mlipper/geosupport-docker:2.0.12
+                     --variant=default
+                     Builds image mlipper/geosupport-docker:2.0.33
 
-                   When specifying only the "default" variant,
-                   the "dist" variant must be available from the
-                   local repository or the build will fail.
+                     When specifying only the "default" variant,
+                     the "dist" variant must be available from the
+                     local repository or the build will fail.
 
-                   --latest (optional)
+                     --latest (optional)
 
-                   When given, tags built variants using the "latest" naming
-                   convention.
+                     When given, tags built variants using the "latest" naming
+                     convention.
 
-                   If the "dist" has been built, creates tag
-                   mlipper/geosupport-docker:latest-dist.
+                     If the "dist" has been built, creates tag
+                     mlipper/geosupport-docker:latest-dist.
 
-                   If the "default" has been built, creates tag
-                   mlipper/geosupport-docker:latest.
+                     If the "default" has been built, creates tag
+                     mlipper/geosupport-docker:latest.
 
-     createvol     Creates a volume from the contents of the $GEOSUPPORT_BASEDIR
-                   directory in image mlipper/geosupport-docker:2.0.12
-                   (i.e., the "default" variant).
+      createvol     Creates a volume from the contents of the $GEOSUPPORT_BASEDIR
+                     directory in image mlipper/geosupport-docker:2.0.33
+                     (i.e., the "default" variant).
 
-       Options:    --volname=<name> (optional)
+         Options:    --volname=<name> (optional)
 
-                   The "<name>" to use when creating the volume.
-                   If --volname is not given, the name is defaulted to
-                   "geosupport-23c_23.3".
+                     The "<name>" to use when creating the volume.
+                     If --volname is not given, the name is defaulted to
+                     "geosupport-26b_26.2".
 
-     exportdist    Copy repackaged Geosupport distribution file from image
-                   mlipper/geosupport-docker:2.0.12-dist
-                   to a host directory.
+      exportdist    Copy repackaged Geosupport distribution file from image
+                     mlipper/geosupport-docker:2.0.33-dist
+                     to a host directory.
 
-       Options:    --exportdir=<name> (optional)
+         Options:    --exportdir=<name> (optional)
 
-                   The host directory where the repackaged Geosupport distribution
-                   file will be copied when running the "exportdist" command.
+                     The host directory where the repackaged Geosupport distribution
+                     file will be copied when running the "exportdist" command.
 
-                   If not given, defaults to "/Users/mlipper/Workspace/github.com/mlipper/geosupport-docker/out/2.0.12".
+                     If not given, defaults to "<root-project-dir>/out/2.0.33".
 
-     help          Show this usage message and exit.
+      help          Show this usage message and exit.
 
-   ```
+      ```
+
+   2. Run the `build` command, optionally but typically with the `--latest` switch
+
+      ```sh
+      $ ./release.sh build --latest
+      ```
+
+5.   **STEP 5.** (Optional) - Generate a new project release folder
+
+     ```sh
+     ./release.sh release
+     ```
+
+6.   **STEP 6.** (Optional) - Create a volume
+
+     ```sh
+     ./release.sh createvol --volname=geosupport-latest
+     ./release.sh custombasedir
+     ```
+
+7.   **STEP 7.** (Optional) - Export the distribution
+
+     ```sh
+     ./release.sh exportdist
+     ```
+
+8.   **STEP 8.** (Optional) - Create a custom distribution
+
+     ```sh
+     ./release.sh custombasedir
+     ```
 
 ## Building on platforms other than `amd64`
 
-> **WARNING**: This is an experimental feature that is subject to change and may not work at all. 
+> **WARNING**: THIS SECTION IS OUT OF DATE
 
 If you are building this project on a platform other than `amd64` (e.g., macOS/Apple M-series chip: `arm64`), you may need to configure a new Docker `build driver` and update the `release.conf` file with it's name.
 
