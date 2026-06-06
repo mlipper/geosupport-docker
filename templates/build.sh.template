@@ -138,11 +138,7 @@ _fixVariant() {
 buildImage() {
     local image_string="$1"
     local file="$2"
-    if [[ "${PLATFORM}" == "amd64" ]] || [[ "${PLATFORM}" == "x86_64" ]]; then
-        docker build -t "${image_string}" --no-cache --platform=linux/amd64 -f "${file}" .
-    else
-        docker buildx build --builder=@builddrv_name@ --no-cache --platform=linux/amd64 -t "${image_string}" -f "${file}" .
-    fi
+    docker build -t "${image_string}" --no-cache --platform=linux/amd64 -f "${file}" .
 }
 
 #
