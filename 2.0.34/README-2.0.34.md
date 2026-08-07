@@ -11,7 +11,14 @@ The latest news about this project.
 * **Version 2.0.34 available.** This release wraps `Geosupport 26c_26.3`.
 * The Department of City Planning provides detailed information about this release in the [Geosupport System User Bulletin](https://www.nyc.gov/content/planning/pages/resources/geocoding/geosupport-desktop-edition).
 
-  **FIXES:**
+This release includes data updates for projects related to ZIP Codes, Local Law Street Name and Named Intersections.
+
+**Changes**
+
+  * N/A
+
+
+**FIXES:**
 
   * [Issue #6](https://github.com/mlipper/geosupport-docker/issues/6) - Build image on arm64 host
   * [Issue #7](https://github.com/mlipper/geosupport-docker/issues/7) - Generated build script broken on Intel Macs
