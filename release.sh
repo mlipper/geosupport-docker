@@ -246,8 +246,8 @@ _post_generate() {
     declare -a scripts=( "${BUILD_DIR}/build.sh" "${BUILD_DIR}/custombasedir.sh" )
     for script in "${scripts[@]}"; do
         chmod +x "${script}"
-        echo "$(basename "${script}")" > "${BUILD_DIR}/.dockerignore"
     done
+    printf '%s\n' "${scripts[@]##*/}" > "${BUILD_DIR}/.dockerignore"
 }
 
 generate() {
@@ -405,7 +405,7 @@ main() {
             build)
                 [[ -z "${build_exists}" ]] &&
                     die "[ERROR] Must run 'generate' before running 'build'.";
-                [[ -n "${variant}" ]] && build_args+=( "${variant##--variant=}" )
+                [[ -n "${variant}" ]] && build_args+=( "${variant}" )
                 [[ -n "${latest}" ]] && build_args+=( "--latest" )
                 echo "Running build with ${build_args[*]}"
                 "${BUILD_DIR}"/build.sh build "${build_args[@]}"
@@ -415,7 +415,7 @@ main() {
             createvol)
                 [[ -z "${build_exists}" ]] &&
                     die "[ERROR] Must run 'generate' before running 'createvol'.";
-                "${BUILD_DIR}"/build.sh createvol "${volname}"
+                "${BUILD_DIR}"/build.sh createvol ${volname:+"${volname}"}
                 ;;
             custombasedir)
                 [[ -z "${build_exists}" ]] &&
