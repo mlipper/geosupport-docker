@@ -24,7 +24,7 @@ COPY --from=mlipper/geosupport-docker:latest-dist \
 
 ## Dockerfile
 
-Provides a fully functional Geosupport installation which, by default, is built from image `ubuntu:jammy`. This `Dockerfile` unpacks, installs and configures Geosupport.
+Provides a fully functional Geosupport installation which, by default, is built from image `ubuntu:noble`. This `Dockerfile` unpacks, installs and configures Geosupport.
 
 The default `CMD` simply prints Geosupport and geosupport-docker version information.
 
@@ -64,7 +64,7 @@ geosupport-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_
 $ docker run -it --rm --mount source=geosupport-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@,target=/opt/geosupport geosupport-docker:latest /bin/true
 
 # Run an interactive bash shell in a new container to test the named volume
-$ docker run -it --rm --mount source=geosupport-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@,target=/opt/geosupport ubuntu:jammy bash
+$ docker run -it --rm --mount source=geosupport-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@,target=/opt/geosupport ubuntu:noble bash
 root@fc1d63c26dca# cd /opt/geosupport
 root@fc1d63c26dca# ls -l
 total 4
@@ -150,7 +150,7 @@ These instructions assume you are using `bash` and your current working director
 
    Property                       Value
    ------------------------------ ----------------------------------------
-   baseimage                      ubuntu:jammy
+   baseimage                      ubuntu:noble
    builddir                       build
    buildtimestamp                 Fri Apr 28 13:28:42 EDT 2023
    buildtz                        America/New_York
@@ -250,6 +250,28 @@ These instructions assume you are using `bash` and your current working director
      help          Show this usage message and exit.
 
    ```
+
+### Updating this `README.md`
+
+The `README.md` in the root project directory is not edited directly. It is generated from the template `<project_dir>/templates/README.md.template` and populated by copying the generated file `<project_dir>/build/README.md` over it.
+
+To change this file:
+
+1. Edit `<project_dir>/templates/README.md.template`.
+
+1. Regenerate the build directory:
+
+   ```sh
+   ./release.sh clean generate
+   ```
+
+1. Copy the generated file over the project's `README.md`:
+
+   ```sh
+   cp build/README.md README.md
+   ```
+
+**NOTE**: The `release` action of `release.sh` does not copy this file. It only updates the "Latest Release" version line of `README.md` in place.
 
 ## About Geosupport
 

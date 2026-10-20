@@ -89,6 +89,18 @@ cat <<- EOF
       of file:
       "${BUILD_DIR}/custombasedir.sh"
 
+      README.md:
+                    The project README.md is not written by this script. It is
+                    populated by copying the generated ${BUILD_DIR}/README.md
+                    (from templates/README.md.template) over it:
+
+                        cp ${BUILD_DIR}/README.md README.md
+
+                    Make README.md changes in the template, not in README.md,
+                    then run 'generate' and copy the result. The 'release'
+                    action only updates the "Latest Release" version line of
+                    README.md in place.
+
 EOF
 }
 
