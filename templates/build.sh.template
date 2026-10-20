@@ -19,7 +19,6 @@ declare -a actions=()
 declare -a variants=()
 
 OUTDIR="$(readlink -vf ../out)"
-PLATFORM="$(uname -m)"
 DEFAULT_TAG="@image_tag@"
 DEFAULT_EXPORTDIR="${OUTDIR}/${DEFAULT_TAG}"
 DEFAULT_VARIANT=default
@@ -165,8 +164,7 @@ createVol() {
 exportDist() {
     local hostdir="$1"
     mkdir -p "${hostdir}"
-    if [[ "${PLATFORM}" == "amd64" ]] || [[ "${PLATFORM}" == "x86_64" ]]; then
-        docker build --platform=linux/amd64 -t gsdexport:latest -<<EOF
+    docker build --platform=linux/amd64 -t gsdexport:latest -<<EOF
 # syntax=docker/dockerfile:1
 FROM busybox:glibc
 RUN mkdir -p /xfer
@@ -175,17 +173,6 @@ COPY --from=${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-${DIST_VARIANT} \
         /dist/geosupport-${FULLVER}.tgz
 CMD ["cp", "-v", "/dist/geosupport-${FULLVER}.tgz", "/xfer"]
 EOF
-    else
-        docker buildx build --builder=@builddrv_name@ --platform=linux/amd64 -t gsdexport:latest -<<EOF
-# syntax=docker/dockerfile:1
-FROM busybox:glibc
-RUN mkdir -p /xfer
-COPY --from=${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}-${DIST_VARIANT} \
-        /dist/geosupport.tgz \
-        /dist/geosupport-${FULLVER}.tgz
-CMD ["cp", "-v", "/dist/geosupport-${FULLVER}.tgz", "/xfer"]
-EOF
-    fi
     docker run --platform=linux/amd64 --rm -it --volume="${hostdir}:/xfer:rw" gsdexport:latest
     docker rmi gsdexport:latest
 }

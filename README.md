@@ -123,8 +123,6 @@ geosupport_minor=11
 
 ## Building `geosupport-docker`
 
-_For building these images on an architecture other than `amd64`, see section [Building on platforms other than `amd64`](#building-on-platforms-other-than-amd64) below._
-
 This project is built using the `release.sh` script in the root project directory (`<project_dir>`). Most of the real work happens in other scripts which are built from templates in the `<project_dir>/templates` directory and generated to the `<project_dir>/build` directory.
 
 **NOTE**: All build instructions that follow assume you are using `bash` and your current working directory is `<project_dir>` unless otherwise noted.
@@ -185,7 +183,6 @@ Some build steps rely on the output of previous steps and must be built in a spe
   ------------------------------ ----------------------------------------
   baseimage                      ubuntu:noble
   builddir                       build
-  builddrv_name                  amd64-driver
   buildtimestamp                 Sun May  3 13:51:05 EDT 2026
   buildtz                        America/New_York
   dcp_distfile                   geo26b_26.2.zip
@@ -309,27 +306,6 @@ Some build steps rely on the output of previous steps and must be built in a spe
   ```sh
   ./release.sh custombasedir
   ```
-
-## Building on platforms other than `amd64`
-
-> **WARNING**: THIS SECTION IS OUT OF DATE
-
-If you are building this project on a platform other than `amd64` (e.g., macOS/Apple M-series chip: `arm64`), you may need to configure a new Docker `build driver` and update the `release.conf` file with it's name.
-
-Here's an example using this project's default build driver name, "amd64-driver", and default build driver image option, "amd64/ubuntu":
-
-```sh
-docker buildx create \
---name=amd64-driver \
---driver=docker-container \
---driver-opt=image=amd64/ubuntu \
---use \
---bootstrap
-```
-
-If you use a different name, be sure to update the `release.conf` file property `builddrv_name`.
-
-See [Docker container build driver](https://docs.docker.com/build/builders/drivers/docker-container/) for more details.
 
 ## About Geosupport
 
