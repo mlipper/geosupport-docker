@@ -36,6 +36,33 @@ die() {
   exit 1
 }
 
+#
+# Rewrites checklist.chk (if present) so it matches the modified files.
+# Output format is the same as sha256sum so the packaged "checklist"
+# script keeps working. Falls back to shasum when sha256sum is not on PATH
+# (e.g., macOS without coreutils).
+#
+# $1 version directory
+#
+regenerate_checklist() {
+  local vdir="$1"
+  local chk="${vdir}/checklist.chk"
+  [[ -f "${chk}" ]] || return 0
+  local sum
+  if command -v sha256sum &> /dev/null; then
+    sum=( sha256sum )
+  elif command -v gsha256sum &> /dev/null; then
+    sum=( gsha256sum )
+  else
+    sum=( shasum -a 256 )
+  fi
+  echo "[INFO] -> regenerating ${chk}"
+  ( cd "${vdir}" \
+      && find . -type f -not -name 'checklist.chk*' -exec "${sum[@]}" "{}" + > checklist.chk.new \
+      && mv checklist.chk.new checklist.chk ) \
+    || die "Could not regenerate ${chk}."
+}
+
 compress() {
   mkdir -p "${SRCDIR}" \
     && dexists "${SRCDIR}" \
@@ -49,14 +76,15 @@ compress() {
     # sed usage notes:
     #
     #   '-i.orig' backs up original files before in-place substitution
-    #   Use '_' as a delimitter since the pattern contains '/'
+    #   Use '|' as a delimitter since the pattern contains '/'
     #   'g' global line match
     #
-    echo "[INFO] -> sed -i.orig "s_${DOCKERDIR}_${CUSTOMDIR}_g" "${srcfile}""
-    sed -i.orig "s_${DOCKERDIR}_${CUSTOMDIR}_g" "${srcfile}"
+    echo "[INFO] -> sed -i.orig "s|${DOCKERDIR}|${CUSTOMDIR}|g" "${srcfile}""
+    sed -i.orig "s|${DOCKERDIR}|${CUSTOMDIR}|g" "${srcfile}"
     echo "[INFO] -> mv "${srcfile}.orig" "${WORKDIR}""
     mv "${srcfile}.orig" "${WORKDIR}"
   done
+  regenerate_checklist "${SRCDIR}/version-${GOAT_VERSION}"
   echo "[INFO] -> tar czvf "${OUTFILE}" -C "${SRCDIR}" "version-${GOAT_VERSION}""
   tar czvf "${OUTFILE}" -C "${SRCDIR}" "version-${GOAT_VERSION}" \
       || die "Could not create ${OUTFILE}."
