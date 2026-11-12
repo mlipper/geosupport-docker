@@ -79,7 +79,7 @@ compress() {
     #   Use '|' as a delimitter since the pattern contains '/'
     #   'g' global line match
     #
-    echo "[INFO] -> sed -i.orig "s|${DOCKERDIR}|${CUSTOMDIR}|g" "${srcfile}""
+    echo "[INFO] -> sed -i.orig s|${DOCKERDIR}|${CUSTOMDIR}|g ${srcfile}"
     sed -i.orig "s|${DOCKERDIR}|${CUSTOMDIR}|g" "${srcfile}"
     echo "[INFO] -> mv "${srcfile}.orig" "${WORKDIR}""
     mv "${srcfile}.orig" "${WORKDIR}"
@@ -154,7 +154,7 @@ cat <<- EOF
 
 
   Notes:
-    Before running this script, the distribution must be generated in 
+    Before running this script, the distribution must be generated in
     the build order documented here:
     ${PROJECTDIR}/README.md
 
