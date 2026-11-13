@@ -6,6 +6,12 @@ Dockerfiles for installing, configuring and using the NYC Department of City Pla
 
 **Version @image_tag@** [release notes](./@image_tag@/README-@image_tag@.md).
 
+## IMPORTANT: Platform Support
+
+The Department of City Planning Geosupport Linux distributions *only run on `amd64`*. If you are using this project's `Dockerfiles` on a different 64-bit platform (e.g., `arm64` on a Mac), you must add the `--platform linux/amd64` argument for all Docker commands that accept it (`docker build`, `docker run`, etc.).
+
+Of course, the reverse is also true: if you are using an `amd64` platform, the `--platform linux/amd64` can be left out.
+
 ## Dockerfile.dist
 
 Provides distribution image built from `scratch` which contains only a patched and repackaged version of Geosupport allowing for full control and configuration from an unrelated Dockerfile. E.g., simplified creation of volumes and "data-packed volume containers".
@@ -29,13 +35,13 @@ Provides a fully functional Geosupport installation which, by default, is built 
 The default `CMD` simply prints Geosupport and geosupport-docker version information.
 
 ```sh
-docker run -it --rm geosupport-docker:latest
+docker run --platform linux/amd64 -it --rm geosupport-docker:latest
 ```
 
 To run DCP's CLI application for interacting with Geosupport from the command line, use the `geosupport` command with the `goat` argument:
 
 ```sh
-docker run -it --rm geosupport-docker:latest geosupport goat
+docker run --platform linux/amd64 -it --rm geosupport-docker:latest geosupport goat
 
 
 ------------------------------------------------------------------------------------------
@@ -50,7 +56,7 @@ Function HR GRC = 00
 To see what other functionality the `geosupport` command provides, run:
 
 ```sh
-docker run -it --rm geosupport-docker:latest geosupport help
+docker run --platform linux/amd64 -it --rm geosupport-docker:latest geosupport help
 ```
 
 However, the most common usage of this `Dockerfile` is for creating a volume containing a complete Geosupport installation directory.
@@ -61,10 +67,10 @@ $ docker volume create geosupport-@geosupport_major@@geosupport_release@@geosupp
 geosupport-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@
 
 # Populate the volume with the contents of GEOSUPPORT_BASE (replace the default CMD with a simple no-op command)
-$ docker run -it --rm --mount source=geosupport-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@,target=/opt/geosupport geosupport-docker:latest /bin/true
+$ docker run --platform linux/amd64 -it --rm --mount source=geosupport-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@,target=/opt/geosupport geosupport-docker:latest /bin/true
 
 # Run an interactive bash shell in a new container to test the named volume
-$ docker run -it --rm --mount source=geosupport-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@,target=/opt/geosupport ubuntu:noble bash
+$ docker run --platform linux/amd64 -it --rm --mount source=geosupport-@geosupport_major@@geosupport_release@@geosupport_patch@_@geosupport_major@.@geosupport_minor@,target=/opt/geosupport ubuntu:noble bash
 root@fc1d63c26dca# cd /opt/geosupport
 root@fc1d63c26dca# ls -l
 total 4
