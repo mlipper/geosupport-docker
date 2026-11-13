@@ -30,6 +30,7 @@ GEOSUPPORT_BASEDIR="@geosupport_basedir@"
 IMAGE_NAME="@image_name@"
 IMAGE_TAG="@image_tag@"
 REPO_NAME="@repo_name@"
+USE_CACHE=
 
 #
 # Functions
@@ -80,6 +81,12 @@ Commands:
 
                 If the "${DEFAULT_VARIANT}" has been built, creates tag
                 ${REPO_NAME}/${IMAGE_NAME}:latest.
+
+                --use-cache (optional)
+
+                By default, images are built without the build cache
+                (i.e., "--no-cache" is passed to the Docker build command).
+                When given, "--no-cache" is omitted and the cache is used.
 
   createvol     Creates a volume from the contents of the \$GEOSUPPORT_BASEDIR
                 directory in image ${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
@@ -141,7 +148,9 @@ _fixVariant() {
 buildImage() {
     local image_string="$1"
     local file="$2"
-    docker build -t "${image_string}" --no-cache --platform=linux/amd64 -f "${file}" .
+    local -a extra_args=()
+    [[ "${USE_CACHE}" != "yes" ]] && extra_args+=( "--no-cache" )
+    docker build -t "${image_string}" ${extra_args[@]+"${extra_args[@]}"} --platform=linux/amd64 -f "${file}" .
 }
 
 #
@@ -218,6 +227,9 @@ main() {
                 ;;
             --latest)
                 tag_as_latest="yes"; shift
+                ;;
+            --use-cache)
+                USE_CACHE="yes"; shift
                 ;;
             --variant=*)
                 variants+=( "${1##--variant=}" ); shift
