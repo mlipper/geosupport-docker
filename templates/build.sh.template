@@ -135,13 +135,26 @@ _fixVariant() {
 }
 
 #
+# Using "--pull" and "--no-cache" together ensures that the latest base images are
+# used and no cached layers are reused.
+# See https://docs.docker.com/build/building/best-practices/
+#
+# Using "--provenance=false" and "--platform linux/amd64" together disables
+# the generation of build provenance metadata and explicitly marks the intent
+# to build for the specified platform.
+# See https://docs.docker.com/build/metadata/attestations/
+#
+# See Docker more documentation for the build command:
+# https://docs.docker.com/engine/reference/commandline/build/
+# https://docs.docker.com/reference/cli/docker/build/
+#
 # $1 image string (includes repo prefix)
 # $2 Dockerfile file
 #
 buildImage() {
     local image_string="$1"
     local file="$2"
-    docker build -t "${image_string}" --no-cache --platform=linux/amd64 -f "${file}" .
+    docker build -t "${image_string}" --pull  --no-cache --provenance=false --platform=linux/amd64 -f "${file}" .
 }
 
 #
